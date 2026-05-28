@@ -85,11 +85,6 @@ export default function Login({ onLogin }) {
             <p>Online Hari Ini</p>
           </div>
 
-          <div className="statCard">
-            <h2>99%</h2>
-            <p>Server Stabil</p>
-          </div>
-
         </div>
 
       </div>
@@ -170,7 +165,7 @@ export default function Login({ onLogin }) {
       </div>
 
       <style>{`
-      
+
         *{
           margin:0;
           padding:0;
@@ -281,7 +276,8 @@ export default function Login({ onLogin }) {
         }
 
         .statCard{
-          min-width:160px;
+          flex:1;
+          min-width:220px;
           background:rgba(255,255,255,0.06);
           border:1px solid rgba(255,255,255,0.08);
           backdrop-filter:blur(20px);
