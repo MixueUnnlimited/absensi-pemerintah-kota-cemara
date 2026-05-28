@@ -46,29 +46,16 @@ export default function Login({ onLogin }) {
 
   const handleAuth = async () => {
 
-    if (!email || !password) {
-      alert('Email dan password wajib diisi')
-      return
-    }
+  if (!email || !password) {
+    alert('Email dan password wajib diisi')
+    return
+  }
 
-    if (mode === 'register') {
+  // ================= REGISTER =================
+  if (mode === 'register') {
 
-      const { error } = await supabase.auth.signUp({
-        email,
-        password
-      })
-
-      if (error) {
-        alert(error.message)
-        return
-      }
-
-      alert('Akun berhasil dibuat')
-      setMode('login')
-      return
-    }
-
-    const { error } = await supabase.auth.signInWithPassword({
+    // register auth
+    const { data, error } = await supabase.auth.signUp({
       email,
       password
     })
@@ -78,12 +65,49 @@ export default function Login({ onLogin }) {
       return
     }
 
-    alert(`Login berhasil sebagai ${role.toUpperCase()}`)
+    // simpan ke profiles
+    if (data.user) {
 
-    if (onLogin) {
-      onLogin(role)
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert([
+          {
+            id: data.user.id,
+            email: email,
+            role: role
+          }
+        ])
+
+      if (profileError) {
+        console.log(profileError)
+      }
     }
+
+    // refresh total staff
+    fetchStats()
+
+    alert('Akun berhasil dibuat')
+    setMode('login')
+    return
   }
+
+  // ================= LOGIN =================
+  const { error } = await supabase.auth.signInWithPassword({
+    email,
+    password
+  })
+
+  if (error) {
+    alert(error.message)
+    return
+  }
+
+  alert(`Login berhasil sebagai ${role.toUpperCase()}`)
+
+  if (onLogin) {
+    onLogin(role)
+  }
+}
 
   return (
     <div className="container">
