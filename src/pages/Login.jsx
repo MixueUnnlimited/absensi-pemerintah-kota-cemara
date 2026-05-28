@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 
 export default function Login({ onLogin }) {
 
+  const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [role, setRole] = useState('staff')
@@ -46,16 +47,64 @@ export default function Login({ onLogin }) {
 
   const handleAuth = async () => {
 
-  if (!email || !password) {
-    alert('Email dan password wajib diisi')
-    return
-  }
+    // LOGIN VALIDATION
+    if (mode === 'login') {
 
-  // ================= REGISTER =================
-  if (mode === 'register') {
+      if (!email || !password) {
+        alert('Email dan password wajib diisi')
+        return
+      }
 
-    // register auth
-    const { data, error } = await supabase.auth.signUp({
+    }
+
+    // REGISTER VALIDATION
+    if (mode === 'register') {
+
+      if (!name || !email || !password) {
+        alert('Nama, email, dan password wajib diisi')
+        return
+      }
+
+      // REGISTER AUTH
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password
+      })
+
+      if (error) {
+        alert(error.message)
+        return
+      }
+
+      // SAVE PROFILE
+      if (data.user) {
+
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert([
+            {
+              id: data.user.id,
+              name: name,
+              email: email,
+              role: role
+            }
+          ])
+
+        if (profileError) {
+          console.log(profileError)
+        }
+      }
+
+      // REFRESH STATS
+      fetchStats()
+
+      alert('Akun berhasil dibuat')
+      setMode('login')
+      return
+    }
+
+    // LOGIN
+    const { error } = await supabase.auth.signInWithPassword({
       email,
       password
     })
@@ -65,49 +114,12 @@ export default function Login({ onLogin }) {
       return
     }
 
-    // simpan ke profiles
-    if (data.user) {
+    alert(`Login berhasil sebagai ${role.toUpperCase()}`)
 
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert([
-          {
-            id: data.user.id,
-            email: email,
-            role: role
-          }
-        ])
-
-      if (profileError) {
-        console.log(profileError)
-      }
+    if (onLogin) {
+      onLogin(role)
     }
-
-    // refresh total staff
-    fetchStats()
-
-    alert('Akun berhasil dibuat')
-    setMode('login')
-    return
   }
-
-  // ================= LOGIN =================
-  const { error } = await supabase.auth.signInWithPassword({
-    email,
-    password
-  })
-
-  if (error) {
-    alert(error.message)
-    return
-  }
-
-  alert(`Login berhasil sebagai ${role.toUpperCase()}`)
-
-  if (onLogin) {
-    onLogin(role)
-  }
-}
 
   return (
     <div className="container">
@@ -199,6 +211,17 @@ export default function Login({ onLogin }) {
               : `Daftar akun ${role.toUpperCase()}`}
           </p>
 
+          {/* INPUT NAMA */}
+          {mode === 'register' && (
+            <input
+              type="text"
+              placeholder="Masukkan nama lengkap"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+          )}
+
+          {/* INPUT EMAIL */}
           <input
             type="email"
             placeholder="Masukkan email"
@@ -206,6 +229,7 @@ export default function Login({ onLogin }) {
             onChange={(e) => setEmail(e.target.value)}
           />
 
+          {/* INPUT PASSWORD */}
           <input
             type="password"
             placeholder="Masukkan password"
@@ -358,123 +382,6 @@ export default function Login({ onLogin }) {
           backdrop-filter:blur(20px);
           padding:24px;
           border-radius:24px;
-        }
-
-        .statCard h2{
-          font-size:32px;
-          margin-bottom:8px;
-        }
-
-        .statCard p{
-          color:#cbd5e1;
-        }
-
-        .right{
-          width:480px;
-          display:flex;
-          justify-content:center;
-          align-items:center;
-          padding:40px;
-          z-index:2;
-        }
-
-        .loginBox{
-          width:100%;
-          background:rgba(255,255,255,0.08);
-          border:1px solid rgba(255,255,255,0.1);
-          backdrop-filter:blur(20px);
-          border-radius:30px;
-          padding:35px;
-        }
-
-        .tab{
-          display:flex;
-          background:rgba(255,255,255,0.05);
-          padding:5px;
-          border-radius:14px;
-          margin-bottom:30px;
-        }
-
-        .tab button{
-          flex:1;
-          border:none;
-          background:none;
-          color:white;
-          padding:12px;
-          border-radius:10px;
-          cursor:pointer;
-          font-weight:600;
-        }
-
-        .tab .active{
-          background:#2563eb;
-        }
-
-        .loginBox h2{
-          font-size:32px;
-          margin-bottom:8px;
-        }
-
-        .desc{
-          color:#cbd5e1;
-          margin-bottom:24px;
-        }
-
-        input{
-          width:100%;
-          padding:16px;
-          margin-bottom:16px;
-          border:none;
-          border-radius:14px;
-          background:rgba(255,255,255,0.05);
-          color:white;
-          outline:none;
-        }
-
-        .loginBtn{
-          width:100%;
-          padding:16px;
-          border:none;
-          border-radius:14px;
-          background:linear-gradient(135deg,#2563eb,#3b82f6);
-          color:white;
-          font-weight:700;
-          cursor:pointer;
-        }
-
-        .switchBtn{
-          width:100%;
-          margin-top:14px;
-          padding:14px;
-          border:none;
-          background:none;
-          color:#93c5fd;
-          cursor:pointer;
-        }
-
-        @media(max-width:1000px){
-
-          .container{
-            flex-direction:column;
-          }
-
-          .left{
-            padding:40px 25px;
-          }
-
-          .hero h1{
-            font-size:42px;
-          }
-
-          .right{
-            width:100%;
-            padding:20px;
-          }
-
-          .loginBox{
-            max-width:500px;
-          }
-
         }
 
       `}</style>
