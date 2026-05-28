@@ -89,12 +89,17 @@ export default function Login({ onLogin }) {
         </div>
       </div>
 
-      {/* STYLE FIXED */}
+      {/* STYLE FINAL FIX */}
       <style>{`
         * {
           box-sizing: border-box;
           margin: 0;
           padding: 0;
+        }
+
+        body {
+          margin: 0;
+          overflow-x: hidden;
         }
 
         .container{
@@ -104,16 +109,26 @@ export default function Login({ onLogin }) {
           font-family:sans-serif;
           background: linear-gradient(135deg,#020617,#0f172a,#1e293b);
           color:white;
-          overflow-x:hidden;
+
+          /* 🔥 FIX PENTING BIAR TIDAK KETUMPUK */
+          align-items: stretch;
         }
 
         .left{
           flex:1;
-          padding:60px;
+          padding:40px;
           display:flex;
           flex-direction:column;
           justify-content:center;
-          gap:20px;
+          gap:18px;
+        }
+
+        .right{
+          flex:1;
+          display:flex;
+          justify-content:center;
+          align-items:center;
+          padding:20px;
         }
 
         .logoBox{
@@ -130,36 +145,29 @@ export default function Login({ onLogin }) {
 
         .cardInfo{
           background: rgba(255,255,255,0.05);
-          padding:20px;
+          padding:18px;
           border-radius:15px;
           line-height:1.5;
         }
 
         .stats{
           display:flex;
-          gap:20px;
+          gap:15px;
         }
 
         .stats div{
           flex:1;
           background: rgba(255,255,255,0.05);
-          padding:15px;
+          padding:12px;
           border-radius:12px;
           text-align:center;
         }
 
-        .right{
-          flex:1;
-          display:flex;
-          justify-content:center;
-          align-items:center;
-          padding:40px;
-        }
-
         .loginBox{
-          width:350px;
+          width:360px;
+          max-width:100%;
           background: rgba(255,255,255,0.06);
-          padding:30px;
+          padding:28px;
           border-radius:20px;
           border:1px solid rgba(255,255,255,0.1);
         }
@@ -189,7 +197,7 @@ export default function Login({ onLogin }) {
         input{
           width:100%;
           padding:12px;
-          margin-top:15px;
+          margin-top:12px;
           border-radius:10px;
           border:none;
           background:rgba(255,255,255,0.05);
@@ -199,7 +207,7 @@ export default function Login({ onLogin }) {
 
         .loginBtn{
           width:100%;
-          margin-top:20px;
+          margin-top:18px;
           padding:12px;
           border:none;
           border-radius:10px;
@@ -219,11 +227,11 @@ export default function Login({ onLogin }) {
           }
 
           .left{
-            padding:30px;
+            padding:25px;
           }
 
           .right{
-            padding:20px;
+            padding:15px;
           }
 
           .loginBox{
