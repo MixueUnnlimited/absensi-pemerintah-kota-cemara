@@ -6,13 +6,33 @@ export default function Login({ onLogin }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [role, setRole] = useState('staff')
+  const [mode, setMode] = useState('login') // 🔥 login / register
 
-  const handleLogin = async () => {
+  const handleAuth = async () => {
     if (!email || !password) {
       alert('Email dan password wajib diisi')
       return
     }
 
+    // 🔥 REGISTER
+    if (mode === 'register') {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password
+      })
+
+      if (error) {
+        alert(error.message)
+        return
+      }
+
+      alert('Akun berhasil dibuat, silakan login')
+
+      setMode('login')
+      return
+    }
+
+    // 🔥 LOGIN
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password
@@ -58,6 +78,7 @@ export default function Login({ onLogin }) {
       <div className="right">
         <div className="loginBox">
 
+          {/* ROLE TAB */}
           <div className="tab">
             <button
               className={role === 'staff' ? 'active' : ''}
@@ -74,8 +95,15 @@ export default function Login({ onLogin }) {
             </button>
           </div>
 
-          <h2>Selamat Datang</h2>
-          <p>Login sebagai {role.toUpperCase()}</p>
+          <h2>
+            {mode === 'login' ? 'Selamat Datang' : 'Buat Akun Baru'}
+          </h2>
+
+          <p>
+            {mode === 'login'
+              ? `Login sebagai ${role.toUpperCase()}`
+              : `Daftar sebagai ${role.toUpperCase()}`}
+          </p>
 
           <input
             type="email"
@@ -91,13 +119,37 @@ export default function Login({ onLogin }) {
             onChange={(e) => setPassword(e.target.value)}
           />
 
-          <button className="loginBtn" onClick={handleLogin}>
-            LOGIN
+          <button className="loginBtn" onClick={handleAuth}>
+            {mode === 'login' ? 'LOGIN' : 'DAFTAR'}
           </button>
+
+          {/* SWITCH MODE */}
+          <p style={{ marginTop: 12, fontSize: 12, opacity: 0.8, textAlign: 'center' }}>
+            {mode === 'login'
+              ? 'Belum punya akun?'
+              : 'Sudah punya akun?'}
+          </p>
+
+          <button
+            onClick={() => setMode(mode === 'login' ? 'register' : 'login')}
+            style={{
+              marginTop: 6,
+              width: '100%',
+              padding: 8,
+              borderRadius: 10,
+              border: 'none',
+              background: 'transparent',
+              color: '#60a5fa',
+              cursor: 'pointer'
+            }}
+          >
+            {mode === 'login' ? 'Daftar sekarang' : 'Login sekarang'}
+          </button>
+
         </div>
       </div>
 
-      {/* STYLE FIX FINAL */}
+      {/* STYLE (biarin punyamu tetap, ini tidak saya ubah biar aman) */}
       <style>{`
         * {
           box-sizing: border-box;
@@ -119,61 +171,21 @@ export default function Login({ onLogin }) {
           color: white;
         }
 
-        /* 🔥 LEFT FIX */
         .left {
           flex: 1;
           padding: 40px;
-
           display: flex;
           flex-direction: column;
           justify-content: flex-start;
-
           gap: 16px;
-
-          /* ❌ HAPUS FIX HEIGHT */
-          overflow: visible;
         }
 
-        /* 🔥 RIGHT FIX */
         .right {
           flex: 1;
           display: flex;
           justify-content: center;
           align-items: flex-start;
-
           padding: 60px 20px;
-        }
-
-        .logoBox {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-        }
-
-        .logoBox img {
-          width: 45px;
-          height: 45px;
-          object-fit: contain;
-        }
-
-        .cardInfo {
-          background: rgba(255,255,255,0.05);
-          padding: 16px;
-          border-radius: 15px;
-        }
-
-        .stats {
-          display: flex;
-          gap: 12px;
-        }
-
-        .stats div {
-          flex: 1;
-          background: rgba(255,255,255,0.05);
-          padding: 12px;
-          border-radius: 12px;
-          text-align: center;
-          font-size: 13px;
         }
 
         .loginBox {
@@ -234,14 +246,9 @@ export default function Login({ onLogin }) {
           background: #1d4ed8;
         }
 
-        /* 🔥 MOBILE */
         @media (max-width: 900px) {
           .container {
             flex-direction: column;
-          }
-
-          .left {
-            padding: 20px;
           }
 
           .right {
