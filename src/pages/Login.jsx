@@ -1,4 +1,3 @@
-jsx
 import { useEffect, useState } from 'react'
 import logo from '../assets/logo.png'
 import { supabase } from '../lib/supabase'
