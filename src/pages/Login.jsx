@@ -115,23 +115,25 @@ export default function Login({ onLogin }) {
           font-family:sans-serif;
           background: linear-gradient(135deg,#020617,#0f172a,#1e293b);
           color:white;
+          align-items: stretch;
         }
 
         .left{
           flex:1;
-          padding:35px;
+          padding:30px;
           display:flex;
           flex-direction:column;
-          justify-content:center;
+          justify-content:flex-start; /* 🔥 FIX */
           gap:16px;
+          margin-top:10px;
         }
 
         .right{
           flex:1;
           display:flex;
           justify-content:center;
-          align-items:center;
-          padding:20px;
+          align-items:flex-start; /* 🔥 FIX */
+          padding-top:40px;
         }
 
         .logoBox{
