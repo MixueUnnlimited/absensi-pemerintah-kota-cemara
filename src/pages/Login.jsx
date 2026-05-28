@@ -24,13 +24,13 @@ export default function Login({ onLogin }) {
     }
 
     alert(`Login berhasil sebagai ${role.toUpperCase()}`)
-
     if (onLogin) onLogin(role)
   }
 
   return (
     <div className="container">
 
+      {/* LEFT */}
       <div className="left">
         <div className="logoBox">
           <img src={logo} alt="Logo" />
@@ -54,6 +54,7 @@ export default function Login({ onLogin }) {
         </div>
       </div>
 
+      {/* RIGHT */}
       <div className="right">
         <div className="loginBox">
 
@@ -96,6 +97,7 @@ export default function Login({ onLogin }) {
         </div>
       </div>
 
+      {/* STYLE FIX FINAL */}
       <style>{`
         * {
           box-sizing: border-box;
@@ -108,153 +110,146 @@ export default function Login({ onLogin }) {
           overflow-x: hidden;
         }
 
-        .container{
-          display:flex;
-          min-height:100vh;
-          width:100%;
-          font-family:sans-serif;
+        .container {
+          display: flex;
+          width: 100%;
+          min-height: 100vh;
+          font-family: sans-serif;
           background: linear-gradient(135deg,#020617,#0f172a,#1e293b);
-          color:white;
-
-          /* 🔥 FIX UTAMA */
-          align-items: stretch;
+          color: white;
         }
 
-        .left{
-          flex:1;
-          padding:30px;
+        /* 🔥 LEFT FIX */
+        .left {
+          flex: 1;
+          padding: 40px;
 
-          display:flex;
-          flex-direction:column;
-          justify-content:flex-start;
+          display: flex;
+          flex-direction: column;
+          justify-content: flex-start;
 
-          gap:16px;
+          gap: 16px;
 
-          /* 🔥 ANTI TUMPUK */
-          max-height:100vh;
-          overflow-y:auto;
+          /* ❌ HAPUS FIX HEIGHT */
+          overflow: visible;
         }
 
-        .right{
-          flex:1;
-          display:flex;
-          justify-content:center;
-          align-items:flex-start;
+        /* 🔥 RIGHT FIX */
+        .right {
+          flex: 1;
+          display: flex;
+          justify-content: center;
+          align-items: flex-start;
 
-          padding-top:50px;
-          max-height:100vh;
+          padding: 60px 20px;
         }
 
-        .logoBox{
-          display:flex;
-          align-items:center;
-          gap:12px;
+        .logoBox {
+          display: flex;
+          align-items: center;
+          gap: 12px;
         }
 
-        .logoBox img{
-          width:45px;
-          height:45px;
-          object-fit:contain;
+        .logoBox img {
+          width: 45px;
+          height: 45px;
+          object-fit: contain;
         }
 
-        .cardInfo{
+        .cardInfo {
           background: rgba(255,255,255,0.05);
-          padding:16px;
-          border-radius:15px;
-          font-size:14px;
+          padding: 16px;
+          border-radius: 15px;
         }
 
-        .stats{
-          display:flex;
-          gap:12px;
+        .stats {
+          display: flex;
+          gap: 12px;
         }
 
-        .stats div{
-          flex:1;
+        .stats div {
+          flex: 1;
           background: rgba(255,255,255,0.05);
-          padding:10px;
-          border-radius:12px;
-          text-align:center;
-          font-size:13px;
+          padding: 12px;
+          border-radius: 12px;
+          text-align: center;
+          font-size: 13px;
         }
 
-        .loginBox{
-          width:350px;
-          max-width:100%;
+        .loginBox {
+          width: 360px;
+          max-width: 100%;
           background: rgba(255,255,255,0.06);
-          padding:25px;
-          border-radius:20px;
-          border:1px solid rgba(255,255,255,0.1);
+          padding: 25px;
+          border-radius: 20px;
+          border: 1px solid rgba(255,255,255,0.1);
         }
 
-        .tab{
-          display:flex;
-          margin-bottom:18px;
+        .tab {
+          display: flex;
+          margin-bottom: 18px;
           background: rgba(255,255,255,0.05);
-          border-radius:10px;
-          padding:5px;
+          border-radius: 10px;
+          padding: 5px;
         }
 
-        .tab button{
-          flex:1;
-          padding:8px;
-          background:none;
-          border:none;
-          color:white;
-          cursor:pointer;
-          font-size:13px;
+        .tab button {
+          flex: 1;
+          padding: 8px;
+          background: none;
+          border: none;
+          color: white;
+          cursor: pointer;
         }
 
-        .tab .active{
-          background:#2563eb;
-          border-radius:8px;
+        .tab .active {
+          background: #2563eb;
+          border-radius: 8px;
         }
 
-        input{
-          width:100%;
-          padding:11px;
-          margin-top:10px;
-          border-radius:10px;
-          border:none;
-          background:rgba(255,255,255,0.05);
-          color:white;
-          font-size:13px;
-          outline:none;
+        input {
+          width: 100%;
+          padding: 11px;
+          margin-top: 10px;
+          border-radius: 10px;
+          border: none;
+          background: rgba(255,255,255,0.05);
+          color: white;
+          outline: none;
         }
 
-        .loginBtn{
-          width:100%;
-          margin-top:16px;
-          padding:11px;
-          border:none;
-          border-radius:10px;
-          background:#2563eb;
-          color:white;
-          font-weight:bold;
-          cursor:pointer;
+        .loginBtn {
+          width: 100%;
+          margin-top: 16px;
+          padding: 11px;
+          border: none;
+          border-radius: 10px;
+          background: #2563eb;
+          color: white;
+          font-weight: bold;
+          cursor: pointer;
         }
 
-        .loginBtn:hover{
-          background:#1d4ed8;
+        .loginBtn:hover {
+          background: #1d4ed8;
         }
 
-        @media (max-width: 900px){
-          .container{
-            flex-direction:column;
+        /* 🔥 MOBILE */
+        @media (max-width: 900px) {
+          .container {
+            flex-direction: column;
           }
 
-          .left{
-            max-height:none;
-            overflow:visible;
-            padding:20px;
+          .left {
+            padding: 20px;
           }
 
-          .right{
-            padding:20px;
+          .right {
+            padding: 20px;
           }
 
-          .loginBox{
-            width:100%;
+          .loginBox {
+            width: 100%;
           }
         }
       `}</style>
