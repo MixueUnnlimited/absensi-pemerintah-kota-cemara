@@ -18,29 +18,17 @@ export default function Login({ onLogin }) {
 
   const fetchStats = async () => {
     try {
-      // TOTAL STAFF
-      const { count: total, error: totalError } = await supabase
+      const { count: total } = await supabase
         .from('profiles')
-        .select('*', {
-          count: 'exact',
-          head: true
-        })
+        .select('*', { count: 'exact', head: true })
 
-      if (totalError) console.log(totalError)
-
-      // ONLINE TODAY
       const today = new Date().toISOString().split('T')[0]
 
-      const { count: online, error: onlineError } = await supabase
+      const { count: online } = await supabase
         .from('attendance')
-        .select('*', {
-          count: 'exact',
-          head: true
-        })
+        .select('*', { count: 'exact', head: true })
         .eq('date', today)
         .eq('status', 'ON_DUTY')
-
-      if (onlineError) console.log(onlineError)
 
       setTotalStaff(total || 0)
       setOnlineToday(online || 0)
@@ -51,53 +39,37 @@ export default function Login({ onLogin }) {
 
   const handleAuth = async () => {
     try {
-      // ================= LOGIN =================
       if (mode === 'login') {
-        if (!email || !password) {
-          alert('Email dan password wajib diisi')
-          return
-        }
+        if (!email || !password) return alert('Email dan password wajib diisi')
 
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password
         })
 
-        if (error) {
-          alert(error.message)
-          return
-        }
+        if (error) return alert(error.message)
 
-        // GET PROFILE
-        const { data: profile, error: profileError } = await supabase
+        const { data: profile } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', data.user.id)
           .single()
 
-        if (profileError) {
-          console.log(profileError)
-        }
-
         alert(`Login berhasil sebagai ${profile?.role || role}`)
 
-        if (onLogin) {
-          onLogin(
-            profile || {
-              id: data.user.id,
-              email: data.user.email,
-              role: role
-            }
-          )
-        }
+        onLogin?.(
+          profile || {
+            id: data.user.id,
+            email: data.user.email,
+            role
+          }
+        )
 
         return
       }
 
-      // ================= REGISTER =================
       if (!name || !email || !password) {
-        alert('Nama, email, dan password wajib diisi')
-        return
+        return alert('Nama, email, dan password wajib diisi')
       }
 
       const { data, error } = await supabase.auth.signUp({
@@ -105,36 +77,22 @@ export default function Login({ onLogin }) {
         password
       })
 
-      if (error) {
-        alert(error.message)
-        return
-      }
+      if (error) return alert(error.message)
 
       if (data.user) {
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert([
-            {
-              id: data.user.id,
-              name,
-              email,
-              role
-            }
-          ])
-
-        if (profileError) {
-          console.log(profileError)
-          alert('Gagal menyimpan profile')
-          return
-        }
+        await supabase.from('profiles').insert([
+          {
+            id: data.user.id,
+            name,
+            email,
+            role
+          }
+        ])
       }
 
       fetchStats()
-
       alert('Akun berhasil dibuat')
-
       setMode('login')
-
       setName('')
       setEmail('')
       setPassword('')
@@ -150,7 +108,6 @@ export default function Login({ onLogin }) {
       <div className="left">
         <div className="logoBox">
           <img src={logo} alt="Logo" />
-
           <div>
             <h2>PEMERINTAH</h2>
             <h1>KOTA CEMARA</h1>
@@ -161,14 +118,12 @@ export default function Login({ onLogin }) {
           <span className="badge">ABSENSI DIGITAL</span>
 
           <h1>
-            Website Absensi
-            <br />
+            Website Absensi<br />
             Pegawai Pemerintah
           </h1>
 
           <p>
-            Sistem absensi modern untuk ON DUTY dan OFF DUTY
-            pegawai pemerintah secara realtime dan aman.
+            Sistem absensi modern untuk ON DUTY dan OFF DUTY pegawai pemerintah secara realtime dan aman.
           </p>
         </div>
 
@@ -205,9 +160,7 @@ export default function Login({ onLogin }) {
           </div>
 
           <h2>
-            {mode === 'login'
-              ? 'Selamat Datang 👋'
-              : 'Buat Akun Baru'}
+            {mode === 'login' ? 'Selamat Datang 👋' : 'Buat Akun Baru'}
           </h2>
 
           <p className="desc">
@@ -219,7 +172,7 @@ export default function Login({ onLogin }) {
           {mode === 'register' && (
             <input
               type="text"
-              placeholder="Masukkan nama lengkap"
+              placeholder="Nama lengkap"
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
@@ -227,14 +180,14 @@ export default function Login({ onLogin }) {
 
           <input
             type="email"
-            placeholder="Masukkan email"
+            placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
 
           <input
             type="password"
-            placeholder="Masukkan password"
+            placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
@@ -256,128 +209,151 @@ export default function Login({ onLogin }) {
         </div>
       </div>
 
+      {/* STYLE FIX FULL */}
       <style>{`
-        *{
-          margin:0;
-          padding:0;
-          box-sizing:border-box;
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
         }
 
-        .container{
-          min-height:100vh;
-          display:flex;
-          background:#0f172a;
-          color:white;
+        .container {
+          min-height: 100vh;
+          display: flex;
+          background: #0f172a;
+          color: white;
+          overflow-x: hidden;
         }
 
-        .left{
-          flex:1;
-          padding:60px;
+        .left {
+          flex: 1;
+          padding: 60px;
+          min-width: 0;
         }
 
-        .right{
-          width:450px;
-          display:flex;
-          align-items:center;
-          justify-content:center;
-          padding:20px;
+        .right {
+          width: 450px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 20px;
         }
 
-        .loginBox{
-          width:100%;
-          background:rgba(255,255,255,0.05);
-          padding:30px;
-          border-radius:20px;
+        .loginBox {
+          width: 100%;
+          background: rgba(255,255,255,0.05);
+          padding: 30px;
+          border-radius: 20px;
         }
 
-        .logoBox{
-          display:flex;
-          gap:20px;
-          align-items:center;
-          margin-bottom:40px;
+        .logoBox {
+          display: flex;
+          gap: 20px;
+          align-items: center;
+          margin-bottom: 40px;
+          flex-wrap: wrap;
         }
 
-        .logoBox img{
-          width:80px;
+        .logoBox img {
+          width: 80px;
         }
 
-        .hero h1{
-          font-size:48px;
-          margin:20px 0;
+        .hero h1 {
+          font-size: 48px;
+          margin: 20px 0;
+          line-height: 1.2;
+          word-break: break-word;
         }
 
-        .stats{
-          display:flex;
-          gap:20px;
-          margin-top:40px;
+        .hero p {
+          line-height: 1.6;
+          max-width: 600px;
+          opacity: 0.8;
         }
 
-        .statCard{
-          flex:1;
-          background:rgba(255,255,255,0.05);
-          padding:20px;
-          border-radius:20px;
+        .stats {
+          display: flex;
+          gap: 20px;
+          margin-top: 40px;
+          flex-wrap: wrap;
         }
 
-        .tab{
-          display:flex;
-          gap:10px;
-          margin-bottom:20px;
+        .statCard {
+          flex: 1;
+          min-width: 140px;
+          background: rgba(255,255,255,0.05);
+          padding: 20px;
+          border-radius: 20px;
         }
 
-        .tab button{
-          flex:1;
-          padding:12px;
-          border:none;
-          border-radius:10px;
-          cursor:pointer;
+        .tab {
+          display: flex;
+          gap: 10px;
+          margin-bottom: 20px;
         }
 
-        .active{
-          background:#2563eb;
-          color:white;
+        .tab button {
+          flex: 1;
+          padding: 12px;
+          border: none;
+          border-radius: 10px;
+          cursor: pointer;
         }
 
-        input{
-          width:100%;
-          padding:14px;
-          margin-bottom:14px;
-          border:none;
-          border-radius:10px;
+        .active {
+          background: #2563eb;
+          color: white;
         }
 
-        .loginBtn{
-          width:100%;
-          padding:14px;
-          border:none;
-          border-radius:10px;
-          background:#2563eb;
-          color:white;
-          cursor:pointer;
-          margin-top:10px;
+        input {
+          width: 100%;
+          padding: 14px;
+          margin-bottom: 14px;
+          border: none;
+          border-radius: 10px;
+          outline: none;
         }
 
-        .switchBtn{
-          width:100%;
-          padding:10px;
-          margin-top:10px;
-          background:none;
-          border:none;
-          color:#93c5fd;
-          cursor:pointer;
+        .loginBtn {
+          width: 100%;
+          padding: 14px;
+          border: none;
+          border-radius: 10px;
+          background: #2563eb;
+          color: white;
+          cursor: pointer;
+          margin-top: 10px;
         }
 
-        @media(max-width:900px){
-          .container{
-            flex-direction:column;
+        .switchBtn {
+          width: 100%;
+          padding: 10px;
+          margin-top: 10px;
+          background: none;
+          border: none;
+          color: #93c5fd;
+          cursor: pointer;
+        }
+
+        @media (max-width: 900px) {
+          .container {
+            flex-direction: column;
           }
 
-          .right{
-            width:100%;
+          .right {
+            width: 100%;
           }
 
-          .hero h1{
-            font-size:36px;
+          .left {
+            padding: 30px;
+          }
+
+          .hero h1 {
+            font-size: 32px;
+          }
+
+          .stats {
+            flex-direction: column;
           }
         }
       `}</style>
