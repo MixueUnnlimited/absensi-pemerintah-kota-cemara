@@ -1,26 +1,67 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import logo from '../assets/logo.png'
 import { supabase } from '../lib/supabase'
 
 export default function Login({ onLogin }) {
+
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [role, setRole] = useState('staff')
   const [mode, setMode] = useState('login')
 
+  // realtime stats
+  const [totalStaff, setTotalStaff] = useState(0)
+  const [onlineToday, setOnlineToday] = useState(0)
+
+  // fetch data
+  useEffect(() => {
+    fetchStats()
+  }, [])
+
+  const fetchStats = async () => {
+
+    // TOTAL STAFF
+    const { count: total } = await supabase
+      .from('profiles')
+      .select('*', {
+        count: 'exact',
+        head: true
+      })
+
+    // ONLINE HARI INI
+    const today = new Date().toISOString().split('T')[0]
+
+    const { count: online } = await supabase
+      .from('attendance')
+      .select('*', {
+        count: 'exact',
+        head: true
+      })
+      .eq('date', today)
+      .eq('status', 'ON_DUTY')
+
+    setTotalStaff(total || 0)
+    setOnlineToday(online || 0)
+  }
+
   const handleAuth = async () => {
+
     if (!email || !password) {
       alert('Email dan password wajib diisi')
       return
     }
 
     if (mode === 'register') {
+
       const { error } = await supabase.auth.signUp({
         email,
         password
       })
 
-      if (error) return alert(error.message)
+      if (error) {
+        alert(error.message)
+        return
+      }
 
       alert('Akun berhasil dibuat')
       setMode('login')
@@ -32,17 +73,22 @@ export default function Login({ onLogin }) {
       password
     })
 
-    if (error) return alert(error.message)
+    if (error) {
+      alert(error.message)
+      return
+    }
 
     alert(`Login berhasil sebagai ${role.toUpperCase()}`)
 
-    if (onLogin) onLogin(role)
+    if (onLogin) {
+      onLogin(role)
+    }
   }
 
   return (
     <div className="container">
 
-      {/* BACKGROUND EFFECT */}
+      {/* BACKGROUND */}
       <div className="blur blur1"></div>
       <div className="blur blur2"></div>
 
@@ -59,7 +105,10 @@ export default function Login({ onLogin }) {
         </div>
 
         <div className="hero">
-          <span className="badge">ABSENSI DIGITAL</span>
+
+          <span className="badge">
+            ABSENSI DIGITAL
+          </span>
 
           <h1>
             Website Absensi
@@ -71,17 +120,19 @@ export default function Login({ onLogin }) {
             Sistem absensi modern untuk ON DUTY dan OFF DUTY
             pegawai pemerintah secara realtime dan aman.
           </p>
+
         </div>
 
+        {/* STATS */}
         <div className="stats">
 
           <div className="statCard">
-            <h2>27</h2>
+            <h2>{totalStaff}</h2>
             <p>Total Staff</p>
           </div>
 
           <div className="statCard">
-            <h2>18</h2>
+            <h2>{onlineToday}</h2>
             <p>Online Hari Ini</p>
           </div>
 
@@ -95,6 +146,7 @@ export default function Login({ onLogin }) {
         <div className="loginBox">
 
           <div className="tab">
+
             <button
               className={role === 'staff' ? 'active' : ''}
               onClick={() => setRole('staff')}
@@ -108,6 +160,7 @@ export default function Login({ onLogin }) {
             >
               ADMIN
             </button>
+
           </div>
 
           <h2>
@@ -229,13 +282,11 @@ export default function Login({ onLogin }) {
 
         .logoBox img{
           width:110px;
-          filter:drop-shadow(0 10px 20px rgba(0,0,0,0.4));
         }
 
         .logoBox h2{
           font-size:18px;
           color:#cbd5e1;
-          letter-spacing:1px;
         }
 
         .logoBox h1{
@@ -283,12 +334,6 @@ export default function Login({ onLogin }) {
           backdrop-filter:blur(20px);
           padding:24px;
           border-radius:24px;
-          transition:0.3s;
-        }
-
-        .statCard:hover{
-          transform:translateY(-5px);
-          background:rgba(255,255,255,0.09);
         }
 
         .statCard h2{
@@ -316,7 +361,6 @@ export default function Login({ onLogin }) {
           backdrop-filter:blur(20px);
           border-radius:30px;
           padding:35px;
-          box-shadow:0 20px 60px rgba(0,0,0,0.4);
         }
 
         .tab{
@@ -336,12 +380,10 @@ export default function Login({ onLogin }) {
           border-radius:10px;
           cursor:pointer;
           font-weight:600;
-          transition:0.3s;
         }
 
         .tab .active{
           background:#2563eb;
-          box-shadow:0 10px 20px rgba(37,99,235,0.4);
         }
 
         .loginBox h2{
@@ -363,14 +405,6 @@ export default function Login({ onLogin }) {
           background:rgba(255,255,255,0.05);
           color:white;
           outline:none;
-          font-size:15px;
-          border:1px solid transparent;
-          transition:0.3s;
-        }
-
-        input:focus{
-          border:1px solid #3b82f6;
-          background:rgba(255,255,255,0.08);
         }
 
         .loginBtn{
@@ -382,13 +416,6 @@ export default function Login({ onLogin }) {
           color:white;
           font-weight:700;
           cursor:pointer;
-          font-size:15px;
-          transition:0.3s;
-        }
-
-        .loginBtn:hover{
-          transform:translateY(-2px);
-          box-shadow:0 15px 30px rgba(37,99,235,0.4);
         }
 
         .switchBtn{
@@ -399,11 +426,6 @@ export default function Login({ onLogin }) {
           background:none;
           color:#93c5fd;
           cursor:pointer;
-          transition:0.3s;
-        }
-
-        .switchBtn:hover{
-          color:white;
         }
 
         @media(max-width:1000px){
