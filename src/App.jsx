@@ -21,27 +21,47 @@ export default function App() {
     } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
 
-        if (session?.user) {
+        try {
 
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single()
+          console.log('AUTH CHANGED:', session)
 
-          const userRole = profile?.role || 'staff'
+          if (session?.user) {
 
-          setRole(userRole)
+            const { data: profile, error } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', session.user.id)
+              .maybeSingle()
 
-          if (userRole === 'admin') {
-            setPage('admin')
+            if (error) {
+              console.error('PROFILE ERROR:', error)
+            }
+
+            const userRole = profile?.role || 'staff'
+
+            setRole(userRole)
+
+            if (userRole === 'admin') {
+              setPage('admin')
+            } else {
+              setPage('dashboard')
+            }
+
           } else {
-            setPage('dashboard')
+
+            setPage('login')
+
           }
 
-        } else {
+        } catch (err) {
+
+          console.error('AUTH ERROR:', err)
 
           setPage('login')
+
+        } finally {
+
+          setLoading(false)
 
         }
       }
@@ -57,17 +77,31 @@ export default function App() {
 
     try {
 
-      const { data } = await supabase.auth.getSession()
+      console.log('CHECK SESSION...')
+
+      const { data, error } = await supabase.auth.getSession()
+
+      if (error) {
+        console.error('SESSION ERROR:', error)
+      }
 
       const user = data?.session?.user
 
+      console.log('USER:', user)
+
       if (user) {
 
-        const { data: profile } = await supabase
+        const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', user.id)
-          .single()
+          .maybeSingle()
+
+        if (profileError) {
+          console.error('PROFILE ERROR:', profileError)
+        }
+
+        console.log('PROFILE:', profile)
 
         const userRole = profile?.role || 'staff'
 
@@ -87,7 +121,9 @@ export default function App() {
 
     } catch (err) {
 
-      console.log(err)
+      console.error('CHECK SESSION ERROR:', err)
+
+      setPage('login')
 
     } finally {
 
