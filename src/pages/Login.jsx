@@ -1,18 +1,29 @@
 import { useState } from 'react'
 import logo from '../assets/logo.png'
+import { supabase } from '../lib/supabase'
 
 export default function Login({ onLogin }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [role, setRole] = useState('staff')
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!email || !password) {
       alert('Email dan password wajib diisi')
       return
     }
 
-    alert(`Login sebagai ${role.toUpperCase()} berhasil`)
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    })
+
+    if (error) {
+      alert(error.message)
+      return
+    }
+
+    alert(`Login berhasil sebagai ${role.toUpperCase()}`)
 
     if (onLogin) {
       onLogin(role)
@@ -22,7 +33,6 @@ export default function Login({ onLogin }) {
   return (
     <div className="container">
 
-      {/* LEFT */}
       <div className="left">
         <div className="logoBox">
           <img src={logo} alt="Logo" />
@@ -46,7 +56,6 @@ export default function Login({ onLogin }) {
         </div>
       </div>
 
-      {/* RIGHT */}
       <div className="right">
         <div className="loginBox">
 
@@ -89,18 +98,10 @@ export default function Login({ onLogin }) {
         </div>
       </div>
 
-      {/* STYLE FINAL FIX */}
       <style>{`
-        * {
-          box-sizing: border-box;
-          margin: 0;
-          padding: 0;
-        }
+        * { box-sizing: border-box; margin:0; padding:0; }
 
-        body {
-          margin: 0;
-          overflow-x: hidden;
-        }
+        body { margin:0; overflow-x:hidden; }
 
         .container{
           display:flex;
@@ -109,9 +110,6 @@ export default function Login({ onLogin }) {
           font-family:sans-serif;
           background: linear-gradient(135deg,#020617,#0f172a,#1e293b);
           color:white;
-
-          /* 🔥 FIX PENTING BIAR TIDAK KETUMPUK */
-          align-items: stretch;
         }
 
         .left{
@@ -140,14 +138,12 @@ export default function Login({ onLogin }) {
         .logoBox img{
           width:50px;
           height:50px;
-          object-fit:contain;
         }
 
         .cardInfo{
           background: rgba(255,255,255,0.05);
           padding:18px;
           border-radius:15px;
-          line-height:1.5;
         }
 
         .stats{
@@ -202,7 +198,6 @@ export default function Login({ onLogin }) {
           border:none;
           background:rgba(255,255,255,0.05);
           color:white;
-          outline:none;
         }
 
         .loginBtn{
@@ -222,21 +217,10 @@ export default function Login({ onLogin }) {
         }
 
         @media (max-width: 900px){
-          .container{
-            flex-direction:column;
-          }
-
-          .left{
-            padding:25px;
-          }
-
-          .right{
-            padding:15px;
-          }
-
-          .loginBox{
-            width:100%;
-          }
+          .container{ flex-direction:column; }
+          .left{ padding:25px; }
+          .right{ padding:15px; }
+          .loginBox{ width:100%; }
         }
       `}</style>
     </div>
