@@ -58,7 +58,7 @@ export default function Login({ onLogin }) {
 
         if (error) return alert(error.message)
 
-        // FIX: pakai maybeSingle (anti 500 error)
+        // FIX: safe query (ANTI 500 / NULL CRASH)
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('*')
@@ -92,13 +92,16 @@ export default function Login({ onLogin }) {
         password
       })
 
-      if (error) return alert(error.message)
-
-      if (!data.user) {
-        return alert('Gagal membuat akun')
+      if (error) {
+        console.log('SIGNUP ERROR:', error)
+        return alert(error.message)
       }
 
-      // ================= INSERT PROFILES =================
+      if (!data.user) {
+        return alert('Signup gagal (user tidak dibuat)')
+      }
+
+      // ================= INSERT PROFILE =================
       const { error: profileError } = await supabase
         .from('profiles')
         .insert([
@@ -156,7 +159,6 @@ export default function Login({ onLogin }) {
 
         <div className="logoBox">
           <img src={logo} alt="Logo" />
-
           <div>
             <h2>PEMERINTAH</h2>
             <h1>KOTA CEMARA</h1>
@@ -164,7 +166,6 @@ export default function Login({ onLogin }) {
         </div>
 
         <div className="hero">
-
           <span className="badge">ABSENSI DIGITAL</span>
 
           <h1>
@@ -173,13 +174,11 @@ export default function Login({ onLogin }) {
           </h1>
 
           <p>
-            Sistem absensi modern untuk ON DUTY dan OFF DUTY pegawai pemerintah secara realtime dan aman.
+            Sistem absensi modern ON DUTY dan OFF DUTY pegawai pemerintah.
           </p>
-
         </div>
 
         <div className="stats">
-
           <div className="statCard">
             <h2>{totalStaff}</h2>
             <p>Total Staff</p>
@@ -189,7 +188,6 @@ export default function Login({ onLogin }) {
             <h2>{onlineToday}</h2>
             <p>Online Hari Ini</p>
           </div>
-
         </div>
 
       </div>
@@ -200,7 +198,6 @@ export default function Login({ onLogin }) {
         <div className="loginBox">
 
           <div className="tab">
-
             <button
               className={role === 'staff' ? 'active' : ''}
               onClick={() => setRole('staff')}
@@ -214,13 +211,10 @@ export default function Login({ onLogin }) {
             >
               ADMIN
             </button>
-
           </div>
 
           <h2>
-            {mode === 'login'
-              ? 'Selamat Datang 👋'
-              : 'Buat Akun Baru'}
+            {mode === 'login' ? 'Selamat Datang 👋' : 'Buat Akun Baru'}
           </h2>
 
           <p className="desc">
@@ -282,12 +276,7 @@ export default function Login({ onLogin }) {
           overflow-x:hidden;
         }
 
-        .left{
-          flex:1;
-          padding:60px;
-          min-width:0;
-        }
-
+        .left{flex:1;padding:60px;min-width:0;}
         .right{
           width:450px;
           display:flex;
@@ -319,11 +308,7 @@ export default function Login({ onLogin }) {
           line-height:1.2;
         }
 
-        .hero p{
-          line-height:1.6;
-          max-width:600px;
-          opacity:0.8;
-        }
+        .hero p{opacity:0.8;line-height:1.6;}
 
         .stats{
           display:flex;
@@ -340,11 +325,7 @@ export default function Login({ onLogin }) {
           border-radius:20px;
         }
 
-        .tab{
-          display:flex;
-          gap:10px;
-          margin-bottom:20px;
-        }
+        .tab{display:flex;gap:10px;margin-bottom:20px;}
 
         .tab button{
           flex:1;
@@ -354,10 +335,7 @@ export default function Login({ onLogin }) {
           cursor:pointer;
         }
 
-        .active{
-          background:#2563eb;
-          color:white;
-        }
+        .active{background:#2563eb;color:white;}
 
         input{
           width:100%;
@@ -376,7 +354,6 @@ export default function Login({ onLogin }) {
           background:#2563eb;
           color:white;
           cursor:pointer;
-          margin-top:10px;
         }
 
         .switchBtn{
@@ -386,7 +363,6 @@ export default function Login({ onLogin }) {
           background:none;
           border:none;
           color:#93c5fd;
-          cursor:pointer;
         }
 
         @media (max-width:900px){
