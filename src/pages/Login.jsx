@@ -12,11 +12,8 @@ export default function Login({ onLogin }) {
       return
     }
 
-    console.log('LOGIN:', { role, email, password })
-
     alert(`Login sebagai ${role.toUpperCase()} berhasil`)
 
-    // 🔥 FIX UTAMA: kirim ke App.jsx
     if (onLogin) {
       onLogin(role)
     }
@@ -92,16 +89,22 @@ export default function Login({ onLogin }) {
         </div>
       </div>
 
-      {/* STYLE */}
+      {/* STYLE FIXED */}
       <style>{`
-        * { box-sizing: border-box; }
+        * {
+          box-sizing: border-box;
+          margin: 0;
+          padding: 0;
+        }
 
         .container{
           display:flex;
           min-height:100vh;
+          width:100%;
           font-family:sans-serif;
           background: linear-gradient(135deg,#020617,#0f172a,#1e293b);
           color:white;
+          overflow-x:hidden;
         }
 
         .left{
@@ -129,6 +132,7 @@ export default function Login({ onLogin }) {
           background: rgba(255,255,255,0.05);
           padding:20px;
           border-radius:15px;
+          line-height:1.5;
         }
 
         .stats{
@@ -149,6 +153,7 @@ export default function Login({ onLogin }) {
           display:flex;
           justify-content:center;
           align-items:center;
+          padding:40px;
         }
 
         .loginBox{
@@ -209,9 +214,21 @@ export default function Login({ onLogin }) {
         }
 
         @media (max-width: 900px){
-          .container{ flex-direction:column; }
-          .left{ padding:30px; }
-          .loginBox{ width:100%; }
+          .container{
+            flex-direction:column;
+          }
+
+          .left{
+            padding:30px;
+          }
+
+          .right{
+            padding:20px;
+          }
+
+          .loginBox{
+            width:100%;
+          }
         }
       `}</style>
     </div>
