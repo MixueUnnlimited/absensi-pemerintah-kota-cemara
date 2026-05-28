@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import logo from '../assets/logo.png'
 
-export default function Login() {
+export default function Login({ onLogin }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [role, setRole] = useState('staff')
@@ -13,7 +13,13 @@ export default function Login() {
     }
 
     console.log('LOGIN:', { role, email, password })
+
     alert(`Login sebagai ${role.toUpperCase()} berhasil`)
+
+    // 🔥 FIX UTAMA: kirim ke App.jsx
+    if (onLogin) {
+      onLogin(role)
+    }
   }
 
   return (
@@ -48,10 +54,17 @@ export default function Login() {
         <div className="loginBox">
 
           <div className="tab">
-            <button className={role === 'staff' ? 'active' : ''} onClick={() => setRole('staff')}>
+            <button
+              className={role === 'staff' ? 'active' : ''}
+              onClick={() => setRole('staff')}
+            >
               STAFF
             </button>
-            <button className={role === 'admin' ? 'active' : ''} onClick={() => setRole('admin')}>
+
+            <button
+              className={role === 'admin' ? 'active' : ''}
+              onClick={() => setRole('admin')}
+            >
               ADMIN
             </button>
           </div>
@@ -79,11 +92,9 @@ export default function Login() {
         </div>
       </div>
 
-      {/* STYLE FIXED */}
+      {/* STYLE */}
       <style>{`
-        * {
-          box-sizing: border-box;
-        }
+        * { box-sizing: border-box; }
 
         .container{
           display:flex;
@@ -91,7 +102,6 @@ export default function Login() {
           font-family:sans-serif;
           background: linear-gradient(135deg,#020617,#0f172a,#1e293b);
           color:white;
-          overflow:hidden;
         }
 
         .left{
@@ -107,7 +117,6 @@ export default function Login() {
           display:flex;
           align-items:center;
           gap:15px;
-          margin-bottom:10px;
         }
 
         .logoBox img{
@@ -120,18 +129,11 @@ export default function Login() {
           background: rgba(255,255,255,0.05);
           padding:20px;
           border-radius:15px;
-          line-height:1.5;
-        }
-
-        .cardInfo h1{
-          font-size:28px;
-          margin-bottom:10px;
         }
 
         .stats{
           display:flex;
           gap:20px;
-          margin-top:10px;
         }
 
         .stats div{
@@ -147,7 +149,6 @@ export default function Login() {
           display:flex;
           justify-content:center;
           align-items:center;
-          padding:20px;
         }
 
         .loginBox{
@@ -207,18 +208,10 @@ export default function Login() {
           background:#1d4ed8;
         }
 
-        @media (max-width: 900px) {
-          .container{
-            flex-direction:column;
-          }
-
-          .left{
-            padding:30px;
-          }
-
-          .loginBox{
-            width:100%;
-          }
+        @media (max-width: 900px){
+          .container{ flex-direction:column; }
+          .left{ padding:30px; }
+          .loginBox{ width:100%; }
         }
       `}</style>
     </div>
