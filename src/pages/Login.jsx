@@ -103,8 +103,8 @@ export default function Login({ onLogin }) {
           padding: 0;
         }
 
-        body {
-          margin: 0;
+        html, body {
+          height: 100%;
           overflow-x: hidden;
         }
 
@@ -115,25 +115,34 @@ export default function Login({ onLogin }) {
           font-family:sans-serif;
           background: linear-gradient(135deg,#020617,#0f172a,#1e293b);
           color:white;
+
+          /* 🔥 FIX UTAMA */
           align-items: stretch;
         }
 
         .left{
           flex:1;
           padding:30px;
+
           display:flex;
           flex-direction:column;
-          justify-content:flex-start; /* 🔥 FIX */
+          justify-content:flex-start;
+
           gap:16px;
-          margin-top:10px;
+
+          /* 🔥 ANTI TUMPUK */
+          max-height:100vh;
+          overflow-y:auto;
         }
 
         .right{
           flex:1;
           display:flex;
           justify-content:center;
-          align-items:flex-start; /* 🔥 FIX */
-          padding-top:40px;
+          align-items:flex-start;
+
+          padding-top:50px;
+          max-height:100vh;
         }
 
         .logoBox{
@@ -210,6 +219,7 @@ export default function Login({ onLogin }) {
           background:rgba(255,255,255,0.05);
           color:white;
           font-size:13px;
+          outline:none;
         }
 
         .loginBtn{
@@ -234,11 +244,13 @@ export default function Login({ onLogin }) {
           }
 
           .left{
+            max-height:none;
+            overflow:visible;
             padding:20px;
           }
 
           .right{
-            padding:15px;
+            padding:20px;
           }
 
           .loginBox{
