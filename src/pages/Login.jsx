@@ -18,17 +18,26 @@ export default function Login({ onLogin }) {
   }, [])
 
   const fetchStats = async () => {
+
     try {
 
       const { count: total } = await supabase
         .from('profiles')
-        .select('*', { count: 'exact', head: true })
+        .select('*', {
+          count: 'exact',
+          head: true
+        })
 
-      const today = new Date().toISOString().split('T')[0]
+      const today = new Date()
+        .toISOString()
+        .split('T')[0]
 
       const { count: online } = await supabase
         .from('attendance')
-        .select('*', { count: 'exact', head: true })
+        .select('*', {
+          count: 'exact',
+          head: true
+        })
         .eq('date', today)
         .eq('status', 'ON_DUTY')
 
@@ -36,7 +45,9 @@ export default function Login({ onLogin }) {
       setOnlineToday(online || 0)
 
     } catch (err) {
-      console.log('STATS ERROR:', err)
+
+      console.log(err)
+
     }
   }
 
@@ -44,110 +55,116 @@ export default function Login({ onLogin }) {
 
     try {
 
-      // ================= LOGIN =================
+      // =========================
+      // LOGIN
+      // =========================
       if (mode === 'login') {
 
         if (!email || !password) {
           return alert('Email dan password wajib diisi')
         }
 
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password
-        })
+        const { data, error } =
+          await supabase.auth.signInWithPassword({
+            email,
+            password
+          })
 
-        if (error) return alert(error.message)
+        if (error) {
+          return alert(error.message)
+        }
 
-        // FIX: safe query (ANTI 500 / NULL CRASH)
-        const { data: profile, error: profileError } = await supabase
+        const { data: profile } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', data.user.id)
-          .maybeSingle()
+          .single()
 
-        if (profileError) {
-          console.log('PROFILE ERROR:', profileError)
-        }
+        alert('Login berhasil')
 
-        const finalProfile = profile || {
-          id: data.user.id,
-          email: data.user.email,
-          role: role
-        }
-
-        alert(`Login berhasil sebagai ${finalProfile.role}`)
-
-        onLogin?.(finalProfile)
+        onLogin?.(
+          profile || {
+            id: data.user.id,
+            email: data.user.email,
+            role: 'staff'
+          }
+        )
 
         return
       }
 
-      // ================= REGISTER =================
+      // =========================
+      // REGISTER
+      // =========================
       if (!name || !email || !password) {
-        return alert('Nama, email, dan password wajib diisi')
+        return alert('Lengkapi semua data')
       }
 
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password
-      })
+      const { data, error } =
+        await supabase.auth.signUp({
+          email,
+          password
+        })
 
       if (error) {
-        console.log('SIGNUP ERROR:', error)
         return alert(error.message)
       }
 
-      if (!data.user) {
-        return alert('Signup gagal (user tidak dibuat)')
+      if (data.user) {
+
+        // INSERT PROFILES
+        const { error: profileError } =
+          await supabase
+            .from('profiles')
+            .insert([
+              {
+                id: data.user.id,
+                name: name,
+                email: email,
+                role: role
+              }
+            ])
+
+        if (profileError) {
+          console.log(profileError)
+          return alert('Gagal simpan profile')
+        }
+
+        // INSERT GOVERNMENT STAFF
+        const { error: govError } =
+          await supabase
+            .from('government_staff')
+            .insert([
+              {
+                id: data.user.id,
+                nama: name,
+                jabatan:
+                  role === 'admin'
+                    ? 'Administrator'
+                    : 'Staff Pemerintah'
+              }
+            ])
+
+        if (govError) {
+          console.log(govError)
+        }
       }
-
-      // ================= INSERT PROFILE =================
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert([
-          {
-            id: data.user.id,
-            name,
-            email,
-            role
-          }
-        ])
-
-      if (profileError) {
-        console.log('PROFILE ERROR:', profileError)
-        return alert('Gagal menyimpan profile')
-      }
-
-      // ================= INSERT GOVERNMENT STAFF =================
-      const { error: govError } = await supabase
-        .from('government_staff')
-        .insert([
-          {
-            id: data.user.id,
-            nama: name,
-            jabatan: role === 'admin'
-              ? 'Administrator'
-              : 'Staff Pemerintah'
-          }
-        ])
-
-      if (govError) {
-        console.log('GOV ERROR:', govError)
-        return alert('Gagal menyimpan government staff')
-      }
-
-      fetchStats()
 
       alert('Akun berhasil dibuat')
 
+      fetchStats()
+
       setMode('login')
+
       setName('')
       setEmail('')
       setPassword('')
 
     } catch (err) {
-      console.log('AUTH ERROR:', err)
-      alert('Terjadi error server')
+
+      console.log(err)
+      alert('Terjadi error')
+
     }
   }
 
@@ -158,27 +175,40 @@ export default function Login({ onLogin }) {
       <div className="left">
 
         <div className="logoBox">
-          <img src={logo} alt="Logo" />
+
+          <img
+            src={logo}
+            alt="logo"
+          />
+
           <div>
             <h2>PEMERINTAH</h2>
             <h1>KOTA CEMARA</h1>
           </div>
+
         </div>
 
         <div className="hero">
-          <span className="badge">ABSENSI DIGITAL</span>
+
+          <span className="badge">
+            ABSENSI DIGITAL
+          </span>
 
           <h1>
-            Website Absensi<br />
+            Website Absensi
+            <br />
             Pegawai Pemerintah
           </h1>
 
           <p>
-            Sistem absensi modern ON DUTY dan OFF DUTY pegawai pemerintah.
+            Sistem absensi modern untuk
+            pegawai pemerintah secara realtime.
           </p>
+
         </div>
 
         <div className="stats">
+
           <div className="statCard">
             <h2>{totalStaff}</h2>
             <p>Total Staff</p>
@@ -188,6 +218,7 @@ export default function Login({ onLogin }) {
             <h2>{onlineToday}</h2>
             <p>Online Hari Ini</p>
           </div>
+
         </div>
 
       </div>
@@ -198,37 +229,45 @@ export default function Login({ onLogin }) {
         <div className="loginBox">
 
           <div className="tab">
+
             <button
-              className={role === 'staff' ? 'active' : ''}
+              className={
+                role === 'staff'
+                  ? 'active'
+                  : ''
+              }
               onClick={() => setRole('staff')}
             >
               STAFF
             </button>
 
             <button
-              className={role === 'admin' ? 'active' : ''}
+              className={
+                role === 'admin'
+                  ? 'active'
+                  : ''
+              }
               onClick={() => setRole('admin')}
             >
               ADMIN
             </button>
+
           </div>
 
           <h2>
-            {mode === 'login' ? 'Selamat Datang 👋' : 'Buat Akun Baru'}
-          </h2>
-
-          <p className="desc">
             {mode === 'login'
-              ? `Login sebagai ${role.toUpperCase()}`
-              : `Daftar akun ${role.toUpperCase()}`}
-          </p>
+              ? 'Selamat Datang 👋'
+              : 'Buat Akun'}
+          </h2>
 
           {mode === 'register' && (
             <input
               type="text"
               placeholder="Nama lengkap"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) =>
+                setName(e.target.value)
+              }
             />
           )}
 
@@ -236,24 +275,37 @@ export default function Login({ onLogin }) {
             type="email"
             placeholder="Email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) =>
+              setEmail(e.target.value)
+            }
           />
 
           <input
             type="password"
             placeholder="Password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(e) =>
+              setPassword(e.target.value)
+            }
           />
 
-          <button className="loginBtn" onClick={handleAuth}>
-            {mode === 'login' ? 'LOGIN' : 'DAFTAR'}
+          <button
+            className="loginBtn"
+            onClick={handleAuth}
+          >
+            {mode === 'login'
+              ? 'LOGIN'
+              : 'DAFTAR'}
           </button>
 
           <button
             className="switchBtn"
             onClick={() =>
-              setMode(mode === 'login' ? 'register' : 'login')
+              setMode(
+                mode === 'login'
+                  ? 'register'
+                  : 'login'
+              )
             }
           >
             {mode === 'login'
@@ -266,22 +318,30 @@ export default function Login({ onLogin }) {
       </div>
 
       <style>{`
-        *{margin:0;padding:0;box-sizing:border-box;}
+
+        *{
+          margin:0;
+          padding:0;
+          box-sizing:border-box;
+        }
 
         .container{
           min-height:100vh;
           display:flex;
           background:#0f172a;
           color:white;
-          overflow-x:hidden;
         }
 
-        .left{flex:1;padding:60px;min-width:0;}
+        .left{
+          flex:1;
+          padding:60px;
+        }
+
         .right{
           width:450px;
           display:flex;
-          align-items:center;
           justify-content:center;
+          align-items:center;
           padding:20px;
         }
 
@@ -297,10 +357,11 @@ export default function Login({ onLogin }) {
           gap:20px;
           align-items:center;
           margin-bottom:40px;
-          flex-wrap:wrap;
         }
 
-        .logoBox img{width:80px;}
+        .logoBox img{
+          width:80px;
+        }
 
         .hero h1{
           font-size:48px;
@@ -308,24 +369,29 @@ export default function Login({ onLogin }) {
           line-height:1.2;
         }
 
-        .hero p{opacity:0.8;line-height:1.6;}
+        .hero p{
+          opacity:0.8;
+          line-height:1.6;
+        }
 
         .stats{
           display:flex;
           gap:20px;
           margin-top:40px;
-          flex-wrap:wrap;
         }
 
         .statCard{
           flex:1;
-          min-width:140px;
           background:rgba(255,255,255,0.05);
           padding:20px;
           border-radius:20px;
         }
 
-        .tab{display:flex;gap:10px;margin-bottom:20px;}
+        .tab{
+          display:flex;
+          gap:10px;
+          margin-bottom:20px;
+        }
 
         .tab button{
           flex:1;
@@ -335,7 +401,10 @@ export default function Login({ onLogin }) {
           cursor:pointer;
         }
 
-        .active{background:#2563eb;color:white;}
+        .active{
+          background:#2563eb;
+          color:white;
+        }
 
         input{
           width:100%;
@@ -358,20 +427,38 @@ export default function Login({ onLogin }) {
 
         .switchBtn{
           width:100%;
-          padding:10px;
           margin-top:10px;
-          background:none;
+          padding:10px;
           border:none;
+          background:none;
           color:#93c5fd;
+          cursor:pointer;
         }
 
-        @media (max-width:900px){
-          .container{flex-direction:column;}
-          .right{width:100%;}
-          .left{padding:30px;}
-          .hero h1{font-size:32px;}
-          .stats{flex-direction:column;}
+        @media(max-width:900px){
+
+          .container{
+            flex-direction:column;
+          }
+
+          .right{
+            width:100%;
+          }
+
+          .left{
+            padding:30px;
+          }
+
+          .hero h1{
+            font-size:32px;
+          }
+
+          .stats{
+            flex-direction:column;
+          }
+
         }
+
       `}</style>
 
     </div>
