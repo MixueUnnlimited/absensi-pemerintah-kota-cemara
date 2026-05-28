@@ -36,7 +36,7 @@ export default function Login({ onLogin }) {
       setOnlineToday(online || 0)
 
     } catch (err) {
-      console.log(err)
+      console.log('STATS ERROR:', err)
     }
   }
 
@@ -44,9 +44,7 @@ export default function Login({ onLogin }) {
 
     try {
 
-      // =====================================
-      // LOGIN
-      // =====================================
+      // ================= LOGIN =================
       if (mode === 'login') {
 
         if (!email || !password) {
@@ -58,95 +56,83 @@ export default function Login({ onLogin }) {
           password
         })
 
-        if (error) {
-          return alert(error.message)
-        }
+        if (error) return alert(error.message)
 
-        const { data: profile } = await supabase
+        // FIX: pakai maybeSingle (anti 500 error)
+        const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', data.user.id)
-          .single()
+          .maybeSingle()
 
-        alert(`Login berhasil sebagai ${profile?.role || role}`)
+        if (profileError) {
+          console.log('PROFILE ERROR:', profileError)
+        }
 
-        onLogin?.(
-          profile || {
-            id: data.user.id,
-            email: data.user.email,
-            role
-          }
-        )
+        const finalProfile = profile || {
+          id: data.user.id,
+          email: data.user.email,
+          role: role
+        }
+
+        alert(`Login berhasil sebagai ${finalProfile.role}`)
+
+        onLogin?.(finalProfile)
 
         return
       }
 
-      // =====================================
-      // REGISTER
-      // =====================================
+      // ================= REGISTER =================
       if (!name || !email || !password) {
         return alert('Nama, email, dan password wajib diisi')
       }
 
-      // REGISTER AUTH
       const { data, error } = await supabase.auth.signUp({
         email,
         password
       })
 
-      if (error) {
-        return alert(error.message)
+      if (error) return alert(error.message)
+
+      if (!data.user) {
+        return alert('Gagal membuat akun')
       }
 
-      // =====================================
-      // JIKA USER BERHASIL DIBUAT
-      // =====================================
-      if (data.user) {
+      // ================= INSERT PROFILES =================
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert([
+          {
+            id: data.user.id,
+            name,
+            email,
+            role
+          }
+        ])
 
-        // =====================================
-        // INSERT KE PROFILES
-        // =====================================
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert([
-            {
-              id: data.user.id,
-              name: name,
-              email: email,
-              role: role
-            }
-          ])
-
-        if (profileError) {
-          console.log('PROFILE ERROR:', profileError)
-          return alert('Gagal menyimpan profile')
-        }
-
-        // =====================================
-        // INSERT KE GOVERNMENT STAFF
-        // =====================================
-        const { error: govError } = await supabase
-          .from('government_staff')
-          .insert([
-            {
-              id: data.user.id,
-              nama: name,
-              jabatan:
-                role === 'admin'
-                  ? 'Administrator'
-                  : 'Staff Pemerintah'
-            }
-          ])
-
-        if (govError) {
-          console.log('GOV ERROR:', govError)
-          return alert('Gagal menyimpan government staff')
-        }
+      if (profileError) {
+        console.log('PROFILE ERROR:', profileError)
+        return alert('Gagal menyimpan profile')
       }
 
-      // =====================================
-      // REFRESH
-      // =====================================
+      // ================= INSERT GOVERNMENT STAFF =================
+      const { error: govError } = await supabase
+        .from('government_staff')
+        .insert([
+          {
+            id: data.user.id,
+            nama: name,
+            jabatan: role === 'admin'
+              ? 'Administrator'
+              : 'Staff Pemerintah'
+          }
+        ])
+
+      if (govError) {
+        console.log('GOV ERROR:', govError)
+        return alert('Gagal menyimpan government staff')
+      }
+
       fetchStats()
 
       alert('Akun berhasil dibuat')
@@ -157,10 +143,8 @@ export default function Login({ onLogin }) {
       setPassword('')
 
     } catch (err) {
-
-      console.log(err)
-      alert('Terjadi error')
-
+      console.log('AUTH ERROR:', err)
+      alert('Terjadi error server')
     }
   }
 
@@ -181,20 +165,15 @@ export default function Login({ onLogin }) {
 
         <div className="hero">
 
-          <span className="badge">
-            ABSENSI DIGITAL
-          </span>
+          <span className="badge">ABSENSI DIGITAL</span>
 
           <h1>
-            Website Absensi
-            <br />
+            Website Absensi<br />
             Pegawai Pemerintah
           </h1>
 
           <p>
-            Sistem absensi modern untuk
-            ON DUTY dan OFF DUTY pegawai
-            pemerintah secara realtime dan aman.
+            Sistem absensi modern untuk ON DUTY dan OFF DUTY pegawai pemerintah secara realtime dan aman.
           </p>
 
         </div>
@@ -273,23 +252,14 @@ export default function Login({ onLogin }) {
             onChange={(e) => setPassword(e.target.value)}
           />
 
-          <button
-            className="loginBtn"
-            onClick={handleAuth}
-          >
-            {mode === 'login'
-              ? 'LOGIN'
-              : 'DAFTAR'}
+          <button className="loginBtn" onClick={handleAuth}>
+            {mode === 'login' ? 'LOGIN' : 'DAFTAR'}
           </button>
 
           <button
             className="switchBtn"
             onClick={() =>
-              setMode(
-                mode === 'login'
-                  ? 'register'
-                  : 'login'
-              )
+              setMode(mode === 'login' ? 'register' : 'login')
             }
           >
             {mode === 'login'
@@ -302,12 +272,7 @@ export default function Login({ onLogin }) {
       </div>
 
       <style>{`
-
-        *{
-          margin:0;
-          padding:0;
-          box-sizing:border-box;
-        }
+        *{margin:0;padding:0;box-sizing:border-box;}
 
         .container{
           min-height:100vh;
@@ -346,15 +311,12 @@ export default function Login({ onLogin }) {
           flex-wrap:wrap;
         }
 
-        .logoBox img{
-          width:80px;
-        }
+        .logoBox img{width:80px;}
 
         .hero h1{
           font-size:48px;
           margin:20px 0;
           line-height:1.2;
-          word-break:break-word;
         }
 
         .hero p{
@@ -428,29 +390,12 @@ export default function Login({ onLogin }) {
         }
 
         @media (max-width:900px){
-
-          .container{
-            flex-direction:column;
-          }
-
-          .right{
-            width:100%;
-          }
-
-          .left{
-            padding:30px;
-          }
-
-          .hero h1{
-            font-size:32px;
-          }
-
-          .stats{
-            flex-direction:column;
-          }
-
+          .container{flex-direction:column;}
+          .right{width:100%;}
+          .left{padding:30px;}
+          .hero h1{font-size:32px;}
+          .stats{flex-direction:column;}
         }
-
       `}</style>
 
     </div>
