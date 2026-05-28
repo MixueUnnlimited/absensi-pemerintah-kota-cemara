@@ -13,7 +13,7 @@ export default function Login({ onLogin }) {
       return
     }
 
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { error } = await supabase.auth.signInWithPassword({
       email,
       password
     })
@@ -25,9 +25,7 @@ export default function Login({ onLogin }) {
 
     alert(`Login berhasil sebagai ${role.toUpperCase()}`)
 
-    if (onLogin) {
-      onLogin(role)
-    }
+    if (onLogin) onLogin(role)
   }
 
   return (
@@ -99,9 +97,16 @@ export default function Login({ onLogin }) {
       </div>
 
       <style>{`
-        * { box-sizing: border-box; margin:0; padding:0; }
+        * {
+          box-sizing: border-box;
+          margin: 0;
+          padding: 0;
+        }
 
-        body { margin:0; overflow-x:hidden; }
+        body {
+          margin: 0;
+          overflow-x: hidden;
+        }
 
         .container{
           display:flex;
@@ -114,11 +119,11 @@ export default function Login({ onLogin }) {
 
         .left{
           flex:1;
-          padding:40px;
+          padding:35px;
           display:flex;
           flex-direction:column;
           justify-content:center;
-          gap:18px;
+          gap:16px;
         }
 
         .right{
@@ -132,45 +137,48 @@ export default function Login({ onLogin }) {
         .logoBox{
           display:flex;
           align-items:center;
-          gap:15px;
+          gap:12px;
         }
 
         .logoBox img{
-          width:50px;
-          height:50px;
+          width:45px;
+          height:45px;
+          object-fit:contain;
         }
 
         .cardInfo{
           background: rgba(255,255,255,0.05);
-          padding:18px;
+          padding:16px;
           border-radius:15px;
+          font-size:14px;
         }
 
         .stats{
           display:flex;
-          gap:15px;
+          gap:12px;
         }
 
         .stats div{
           flex:1;
           background: rgba(255,255,255,0.05);
-          padding:12px;
+          padding:10px;
           border-radius:12px;
           text-align:center;
+          font-size:13px;
         }
 
         .loginBox{
-          width:360px;
+          width:350px;
           max-width:100%;
           background: rgba(255,255,255,0.06);
-          padding:28px;
+          padding:25px;
           border-radius:20px;
           border:1px solid rgba(255,255,255,0.1);
         }
 
         .tab{
           display:flex;
-          margin-bottom:20px;
+          margin-bottom:18px;
           background: rgba(255,255,255,0.05);
           border-radius:10px;
           padding:5px;
@@ -183,6 +191,7 @@ export default function Login({ onLogin }) {
           border:none;
           color:white;
           cursor:pointer;
+          font-size:13px;
         }
 
         .tab .active{
@@ -192,18 +201,19 @@ export default function Login({ onLogin }) {
 
         input{
           width:100%;
-          padding:12px;
-          margin-top:12px;
+          padding:11px;
+          margin-top:10px;
           border-radius:10px;
           border:none;
           background:rgba(255,255,255,0.05);
           color:white;
+          font-size:13px;
         }
 
         .loginBtn{
           width:100%;
-          margin-top:18px;
-          padding:12px;
+          margin-top:16px;
+          padding:11px;
           border:none;
           border-radius:10px;
           background:#2563eb;
@@ -217,10 +227,21 @@ export default function Login({ onLogin }) {
         }
 
         @media (max-width: 900px){
-          .container{ flex-direction:column; }
-          .left{ padding:25px; }
-          .right{ padding:15px; }
-          .loginBox{ width:100%; }
+          .container{
+            flex-direction:column;
+          }
+
+          .left{
+            padding:20px;
+          }
+
+          .right{
+            padding:15px;
+          }
+
+          .loginBox{
+            width:100%;
+          }
         }
       `}</style>
     </div>
