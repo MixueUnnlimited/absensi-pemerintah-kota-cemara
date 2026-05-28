@@ -1,137 +1,92 @@
-import { useState } from 'react'
-import { supabase } from '../lib/supabase'
-
-export default function Login({ onLogin }) {
-
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-
-  const handleLogin = async () => {
-
-    const { data, error } =
-      await supabase.auth.signInWithPassword({
-        email,
-        password
-      })
-
-    if (error) {
-      alert(error.message)
-      return
-    }
-
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', data.user.id)
-      .single()
-
-    onLogin(profile?.role || 'staff')
-  }
-
-  return (
+return (
+  <div
+    style={{
+      minHeight: '100vh',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      background:
+        'linear-gradient(135deg,#020617,#0f172a,#1e293b)',
+      padding: 20
+    }}
+  >
     <div
       style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100vh',
-        padding: 20
+        width: '100%',
+        maxWidth: 430,
+        padding: 40,
+        borderRadius: 28,
+        background: 'rgba(255,255,255,0.06)',
+        backdropFilter: 'blur(18px)',
+        border: '1px solid rgba(255,255,255,0.08)',
+        boxShadow:
+          '0 0 40px rgba(0,0,0,0.4)',
+        textAlign: 'center'
       }}
     >
 
       <div
         style={{
-          width: 380,
-          padding: 35,
-          borderRadius: 24,
-          background: 'rgba(255,255,255,0.06)',
-          border: '1px solid rgba(255,255,255,0.1)',
-          backdropFilter: 'blur(16px)',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.4)'
+          fontSize: 42,
+          marginBottom: 10
         }}
       >
-
-        <div style={{ textAlign: 'center' }}>
-
-          <h1 style={{ marginBottom: 5 }}>
-            🏛️ KOTA CEMARA
-          </h1>
-
-          <p style={{
-            color: '#94a3b8',
-            marginBottom: 30
-          }}>
-            Sistem Absensi Pemerintah
-          </p>
-
-        </div>
-
-        <div>
-
-          <label>Email</label>
-
-          <input
-            placeholder='Masukkan email'
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            style={{
-              width: '100%',
-              padding: 14,
-              marginTop: 8,
-              borderRadius: 12,
-              border: '1px solid rgba(255,255,255,0.1)',
-              background: 'rgba(255,255,255,0.05)',
-              color: 'white',
-              outline: 'none',
-              marginBottom: 18
-            }}
-          />
-
-        </div>
-
-        <div>
-
-          <label>Password</label>
-
-          <input
-            type='password'
-            placeholder='Masukkan password'
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            style={{
-              width: '100%',
-              padding: 14,
-              marginTop: 8,
-              borderRadius: 12,
-              border: '1px solid rgba(255,255,255,0.1)',
-              background: 'rgba(255,255,255,0.05)',
-              color: 'white',
-              outline: 'none'
-            }}
-          />
-
-        </div>
-
-        <button
-          onClick={handleLogin}
-          style={{
-            width: '100%',
-            padding: 14,
-            marginTop: 24,
-            border: 'none',
-            borderRadius: 14,
-            background: 'linear-gradient(135deg, #2563eb, #1d4ed8)',
-            color: 'white',
-            fontWeight: 'bold',
-            cursor: 'pointer',
-            fontSize: 16
-          }}
-        >
-          Login Sistem
-        </button>
-
+        🏛️
       </div>
 
+      <h1
+        style={{
+          fontSize: 42,
+          margin: 0,
+          fontWeight: 'bold',
+          lineHeight: 1
+        }}
+      >
+        KOTA
+        <br />
+        CEMARA
+      </h1>
+
+      <p
+        style={{
+          color: '#94a3b8',
+          marginTop: 12,
+          marginBottom: 35
+        }}
+      >
+        Sistem Absensi Pemerintah
+      </p>
+
+      <input
+        type='email'
+        placeholder='Masukkan email'
+        value={email}
+        onChange={(e) =>
+          setEmail(e.target.value)
+        }
+        style={inputStyle}
+      />
+
+      <input
+        type='password'
+        placeholder='Masukkan password'
+        value={password}
+        onChange={(e) =>
+          setPassword(e.target.value)
+        }
+        style={{
+          ...inputStyle,
+          marginTop: 18
+        }}
+      />
+
+      <button
+        onClick={handleLogin}
+        style={buttonStyle}
+      >
+        Login Sistem
+      </button>
+
     </div>
-  )
-}
+  </div>
+)
