@@ -6,7 +6,7 @@ export default function Login({ onLogin }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [role, setRole] = useState('staff')
-  const [mode, setMode] = useState('login') // 🔥 login / register
+  const [mode, setMode] = useState('login')
 
   const handleAuth = async () => {
     if (!email || !password) {
@@ -14,34 +14,25 @@ export default function Login({ onLogin }) {
       return
     }
 
-    // 🔥 REGISTER
     if (mode === 'register') {
-      const { data, error } = await supabase.auth.signUp({
+      const { error } = await supabase.auth.signUp({
         email,
         password
       })
 
-      if (error) {
-        alert(error.message)
-        return
-      }
+      if (error) return alert(error.message)
 
       alert('Akun berhasil dibuat, silakan login')
-
       setMode('login')
       return
     }
 
-    // 🔥 LOGIN
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password
     })
 
-    if (error) {
-      alert(error.message)
-      return
-    }
+    if (error) return alert(error.message)
 
     alert(`Login berhasil sebagai ${role.toUpperCase()}`)
     if (onLogin) onLogin(role)
@@ -50,7 +41,6 @@ export default function Login({ onLogin }) {
   return (
     <div className="container">
 
-      {/* LEFT */}
       <div className="left">
         <div className="logoBox">
           <img src={logo} alt="Logo" />
@@ -74,11 +64,9 @@ export default function Login({ onLogin }) {
         </div>
       </div>
 
-      {/* RIGHT */}
       <div className="right">
         <div className="loginBox">
 
-          {/* ROLE TAB */}
           <div className="tab">
             <button
               className={role === 'staff' ? 'active' : ''}
@@ -96,7 +84,7 @@ export default function Login({ onLogin }) {
           </div>
 
           <h2>
-            {mode === 'login' ? 'Selamat Datang' : 'Buat Akun Baru'}
+            {mode === 'login' ? 'Selamat Datang' : 'Buat Akun'}
           </h2>
 
           <p>
@@ -123,33 +111,18 @@ export default function Login({ onLogin }) {
             {mode === 'login' ? 'LOGIN' : 'DAFTAR'}
           </button>
 
-          {/* SWITCH MODE */}
-          <p style={{ marginTop: 12, fontSize: 12, opacity: 0.8, textAlign: 'center' }}>
-            {mode === 'login'
-              ? 'Belum punya akun?'
-              : 'Sudah punya akun?'}
-          </p>
-
           <button
             onClick={() => setMode(mode === 'login' ? 'register' : 'login')}
-            style={{
-              marginTop: 6,
-              width: '100%',
-              padding: 8,
-              borderRadius: 10,
-              border: 'none',
-              background: 'transparent',
-              color: '#60a5fa',
-              cursor: 'pointer'
-            }}
+            className="switchBtn"
           >
-            {mode === 'login' ? 'Daftar sekarang' : 'Login sekarang'}
+            {mode === 'login'
+              ? 'Belum punya akun? Daftar'
+              : 'Sudah punya akun? Login'}
           </button>
 
         </div>
       </div>
 
-      {/* STYLE (biarin punyamu tetap, ini tidak saya ubah biar aman) */}
       <style>{`
         * {
           box-sizing: border-box;
@@ -164,8 +137,8 @@ export default function Login({ onLogin }) {
 
         .container {
           display: flex;
-          width: 100%;
           min-height: 100vh;
+          width: 100%;
           font-family: sans-serif;
           background: linear-gradient(135deg,#020617,#0f172a,#1e293b);
           color: white;
@@ -242,8 +215,15 @@ export default function Login({ onLogin }) {
           cursor: pointer;
         }
 
-        .loginBtn:hover {
-          background: #1d4ed8;
+        .switchBtn {
+          width: 100%;
+          margin-top: 10px;
+          padding: 10px;
+          border-radius: 10px;
+          border: 1px solid rgba(255,255,255,0.2);
+          background: transparent;
+          color: #93c5fd;
+          cursor: pointer;
         }
 
         @media (max-width: 900px) {
