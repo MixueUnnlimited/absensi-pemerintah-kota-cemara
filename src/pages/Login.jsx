@@ -15,7 +15,7 @@ export default function Login({ onLogin }) {
   const [totalStaff, setTotalStaff] = useState(0)
   const [onlineToday, setOnlineToday] = useState(0)
 
-  // fetch data
+  // fetch stats
   useEffect(() => {
     fetchStats()
   }, [])
@@ -66,7 +66,7 @@ export default function Login({ onLogin }) {
         return
       }
 
-      // ambil profile user
+      // GET PROFILE
       const { data: profile } = await supabase
         .from('profiles')
         .select('*')
@@ -128,6 +128,7 @@ export default function Login({ onLogin }) {
     fetchStats()
 
     alert('Akun berhasil dibuat')
+
     setMode('login')
 
     // reset form
@@ -468,6 +469,11 @@ export default function Login({ onLogin }) {
           background:rgba(255,255,255,0.05);
           color:white;
           outline:none;
+          font-size:15px;
+        }
+
+        input::placeholder{
+          color:#94a3b8;
         }
 
         .loginBtn{
@@ -479,6 +485,7 @@ export default function Login({ onLogin }) {
           color:white;
           font-weight:700;
           cursor:pointer;
+          font-size:15px;
         }
 
         .switchBtn{
@@ -512,6 +519,7 @@ export default function Login({ onLogin }) {
 
           .loginBox{
             max-width:500px;
+            margin:auto;
           }
 
         }
