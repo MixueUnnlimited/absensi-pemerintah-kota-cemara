@@ -68,12 +68,17 @@ export default function Dashboard({ role, goAdmin }) {
 
     const { data: userData } = await supabase.auth.getUser()
 
+    // FORMAT JAM
+    const onDutyTime = now.toLocaleTimeString('id-ID', {
+      hour12: false
+    })
+
     const { error } = await supabase
       .from('government_attendance')
       .insert({
         staff_id: selectedStaff,
         tanggal: today,
-        on_duty: now.toTimeString().split(' ')[0],
+        on_duty: onDutyTime,
         created_by: userData.user.id
       })
 
@@ -123,17 +128,24 @@ export default function Dashboard({ role, goAdmin }) {
     )
 
     // HITUNG SELISIH
-    const diffMs = now - onDutyDate
+    const diffMs = now.getTime() - onDutyDate.getTime()
 
-    // CONVERT KE JAM
-    const totalJam = (
-      diffMs / (1000 * 60 * 60)
-    ).toFixed(2)
+    // TOTAL MENIT
+    const totalMinutes = Math.floor(
+      diffMs / (1000 * 60)
+    )
+
+    // CONVERT
+    const hours = Math.floor(totalMinutes / 60)
+    const minutes = totalMinutes % 60
+
+    // FORMAT FINAL
+    const totalJam = `${hours} Jam ${minutes} Menit`
 
     // JAM KELUAR
-    const offDutyTime = now
-      .toTimeString()
-      .split(' ')[0]
+    const offDutyTime = now.toLocaleTimeString('id-ID', {
+      hour12: false
+    })
 
     // UPDATE DATABASE
     const { error: updateError } = await supabase
@@ -366,9 +378,7 @@ export default function Dashboard({ role, goAdmin }) {
                 </td>
 
                 <td style={tdStyle}>
-                  {item.total_jam
-                    ? `${item.total_jam} Jam`
-                    : '-'}
+                  {item.total_jam || '-'}
                 </td>
 
               </tr>
@@ -395,4 +405,3 @@ const tdStyle = {
   padding: 14,
   borderBottom: '1px solid rgba(255,255,255,0.05)'
 }
-
