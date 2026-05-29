@@ -28,7 +28,13 @@ export default function Dashboard({ role, goAdmin }) {
 
     const { data, error } = await supabase
       .from('government_attendance')
-      .select('*')
+      .select(`
+        *,
+        government_staff (
+          nama,
+          jabatan
+        )
+      `)
       .order('created_at', { ascending: false })
 
     if (error) {
@@ -44,7 +50,7 @@ export default function Dashboard({ role, goAdmin }) {
     loadAttendance()
   }, [])
 
-  // ON DUTY
+  // 🟢 ON DUTY
   const handleOnDuty = async () => {
 
     if (!selectedStaff) {
@@ -61,6 +67,7 @@ export default function Dashboard({ role, goAdmin }) {
       '-' +
       String(now.getDate()).padStart(2, '0')
 
+    // CHECK SUDAH ADA
     const { data: existing } = await supabase
       .from('government_attendance')
       .select('*')
@@ -96,7 +103,7 @@ export default function Dashboard({ role, goAdmin }) {
     loadAttendance()
   }
 
-  // OFF DUTY
+  // 🔴 OFF DUTY
   const handleOffDuty = async () => {
 
     if (!selectedStaff) {
@@ -113,12 +120,18 @@ export default function Dashboard({ role, goAdmin }) {
       '-' +
       String(now.getDate()).padStart(2, '0')
 
-    const { data: record } = await supabase
+    const { data: record, error } = await supabase
       .from('government_attendance')
       .select('*')
       .eq('staff_id', selectedStaff)
       .eq('tanggal', today)
       .maybeSingle()
+
+    if (error) {
+      console.log(error)
+      alert(error.message)
+      return
+    }
 
     if (!record) {
       alert('Belum ON DUTY')
@@ -130,21 +143,55 @@ export default function Dashboard({ role, goAdmin }) {
       return
     }
 
+    // JAM KELUAR
     const jamKeluar = now.toLocaleTimeString('id-ID', {
       hour12: false
     })
 
-    const { error } = await supabase
+    // HITUNG TOTAL JAM
+    let totalJam = '-'
+
+    try {
+
+      const onDutySplit = record.on_duty.split(':')
+
+      const onDutyDate = new Date()
+
+      onDutyDate.setHours(
+        parseInt(onDutySplit[0]),
+        parseInt(onDutySplit[1]),
+        parseInt(onDutySplit[2] || 0)
+      )
+
+      const diffMs =
+        now.getTime() - onDutyDate.getTime()
+
+      const totalMinutes = Math.floor(
+        diffMs / (1000 * 60)
+      )
+
+      const hours = Math.floor(totalMinutes / 60)
+      const minutes = totalMinutes % 60
+
+      totalJam =
+        `${hours} Jam ${minutes} Menit`
+
+    } catch (err) {
+      console.log(err)
+      totalJam = 'Selesai'
+    }
+
+    const { error: updateError } = await supabase
       .from('government_attendance')
       .update({
         off_duty: jamKeluar,
-        total_jam: 'Selesai'
+        total_jam: totalJam
       })
       .eq('id', record.id)
 
-    if (error) {
-      console.log(error)
-      alert(error.message)
+    if (updateError) {
+      console.log(updateError)
+      alert(updateError.message)
       return
     }
 
@@ -153,6 +200,7 @@ export default function Dashboard({ role, goAdmin }) {
     loadAttendance()
   }
 
+  // LOGOUT
   const handleLogout = async () => {
     await supabase.auth.signOut()
     window.location.reload()
@@ -161,38 +209,71 @@ export default function Dashboard({ role, goAdmin }) {
   return (
     <div style={{ padding: 25 }}>
 
+      {/* HEADER */}
       <div
         style={{
           display: 'flex',
           justifyContent: 'space-between',
-          alignItems: 'center'
+          alignItems: 'center',
+          flexWrap: 'wrap'
         }}
       >
 
         <div>
           <h1>🏛️ Pemerintah Kota Cemara</h1>
-          <p>Sistem Absensi Pemerintah</p>
+
+          <p style={{ color: '#94a3b8' }}>
+            Sistem Absensi Pemerintah
+          </p>
         </div>
 
-        <button onClick={handleLogout}>
+        <button
+          onClick={handleLogout}
+          style={{
+            padding: '12px 18px',
+            border: 'none',
+            borderRadius: 12,
+            background: '#dc2626',
+            color: 'white',
+            cursor: 'pointer'
+          }}
+        >
           Logout
         </button>
 
       </div>
 
-      <div style={{
-        marginTop: 30
-      }}>
+      {/* FORM */}
+      <div
+        style={{
+          marginTop: 30,
+          padding: 25,
+          borderRadius: 22,
+          background: 'rgba(255,255,255,0.05)',
+          border: '1px solid rgba(255,255,255,0.08)'
+        }}
+      >
+
+        <h2>📌 Input Absensi</h2>
 
         <select
           value={selectedStaff}
           onChange={(e) =>
             setSelectedStaff(e.target.value)
           }
+          style={{
+            width: '100%',
+            padding: 14,
+            marginTop: 20,
+            borderRadius: 12,
+            background: '#0f172a',
+            color: 'white',
+            border: '1px solid rgba(255,255,255,0.1)'
+          }}
         >
 
           <option value=''>
-            Pilih Staff
+            Pilih Staff Pemerintah
           </option>
 
           {staffList.map((staff) => (
@@ -206,23 +287,26 @@ export default function Dashboard({ role, goAdmin }) {
 
         </select>
 
-        <div style={{
-          marginTop: 20,
-          display: 'flex',
-          gap: 10
-        }}>
+        <div
+          style={{
+            display: 'flex',
+            gap: 15,
+            marginTop: 20,
+            flexWrap: 'wrap'
+          }}
+        >
 
           <button onClick={handleOnDuty}>
-            ON DUTY
+            🟢 ON DUTY
           </button>
 
           <button onClick={handleOffDuty}>
-            OFF DUTY
+            🔴 OFF DUTY
           </button>
 
           {role === 'admin' && (
             <button onClick={goAdmin}>
-              Admin Panel
+              🛠️ Admin Panel
             </button>
           )}
 
@@ -230,24 +314,39 @@ export default function Dashboard({ role, goAdmin }) {
 
       </div>
 
-      <div style={{
-        marginTop: 40
-      }}>
+      {/* TABLE */}
+      <div
+        style={{
+          marginTop: 30,
+          padding: 25,
+          borderRadius: 22,
+          background: 'rgba(255,255,255,0.05)',
+          border: '1px solid rgba(255,255,255,0.08)',
+          overflowX: 'auto'
+        }}
+      >
+
+        <h2>📋 Data Absensi Pemerintah</h2>
 
         <table
-          width='100%'
-          border='1'
-          cellPadding='10'
+          style={{
+            width: '100%',
+            marginTop: 20,
+            borderCollapse: 'collapse'
+          }}
         >
 
           <thead>
+
             <tr>
-              <th>STAFF ID</th>
-              <th>TANGGAL</th>
-              <th>ON DUTY</th>
-              <th>OFF DUTY</th>
-              <th>TOTAL</th>
+              <th style={thStyle}>Nama</th>
+              <th style={thStyle}>Jabatan</th>
+              <th style={thStyle}>Tanggal</th>
+              <th style={thStyle}>ON DUTY</th>
+              <th style={thStyle}>OFF DUTY</th>
+              <th style={thStyle}>TOTAL JAM</th>
             </tr>
+
           </thead>
 
           <tbody>
@@ -256,11 +355,29 @@ export default function Dashboard({ role, goAdmin }) {
 
               <tr key={item.id}>
 
-                <td>{item.staff_id}</td>
-                <td>{item.tanggal}</td>
-                <td>{item.on_duty || '-'}</td>
-                <td>{item.off_duty || '-'}</td>
-                <td>{item.total_jam || '-'}</td>
+                <td style={tdStyle}>
+                  {item.government_staff?.nama || '-'}
+                </td>
+
+                <td style={tdStyle}>
+                  {item.government_staff?.jabatan || '-'}
+                </td>
+
+                <td style={tdStyle}>
+                  {item.tanggal || '-'}
+                </td>
+
+                <td style={tdStyle}>
+                  {item.on_duty || '-'}
+                </td>
+
+                <td style={tdStyle}>
+                  {item.off_duty || '-'}
+                </td>
+
+                <td style={tdStyle}>
+                  {item.total_jam || '-'}
+                </td>
 
               </tr>
 
@@ -274,4 +391,15 @@ export default function Dashboard({ role, goAdmin }) {
 
     </div>
   )
+}
+
+const thStyle = {
+  padding: 14,
+  textAlign: 'left',
+  borderBottom: '1px solid rgba(255,255,255,0.08)'
+}
+
+const tdStyle = {
+  padding: 14,
+  borderBottom: '1px solid rgba(255,255,255,0.05)'
 }
