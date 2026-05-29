@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 
@@ -43,78 +44,110 @@ export default function Dashboard({ role, goAdmin }) {
 
   // 🟢 ON DUTY
   const handleOnDuty = async () => {
-  if (!selectedStaff) {
-    alert('Pilih staff dulu')
-    return
+
+    if (!selectedStaff) {
+      alert('Pilih staff dulu')
+      return
+    }
+
+    const now = new Date()
+    const today = now.toISOString().split('T')[0]
+
+    // CEK SUDAH ON DUTY
+    const { data: existing } = await supabase
+      .from('government_attendance')
+      .select('*')
+      .eq('staff_id', selectedStaff)
+      .eq('tanggal', today)
+      .single()
+
+    if (existing) {
+      alert('Staff sudah ON DUTY hari ini')
+      return
+    }
+
+    const { data: userData } = await supabase.auth.getUser()
+
+    await supabase
+      .from('government_attendance')
+      .insert({
+        staff_id: selectedStaff,
+        tanggal: today,
+        on_duty: now.toTimeString().split(' ')[0],
+        created_by: userData.user.id
+      })
+
+    alert('ON DUTY berhasil')
+
+    loadAttendance()
   }
-
-  const now = new Date()
-  const today = now.toISOString().split('T')[0]
-
-  // CEK SUDAH ON DUTY HARI INI
-  const { data: existing } = await supabase
-    .from('government_attendance')
-    .select('*')
-    .eq('staff_id', selectedStaff)
-    .eq('tanggal', today)
-    .single()
-
-  if (existing) {
-    alert('Staff sudah ON DUTY hari ini')
-    return
-  }
-
-  const { data: userData } = await supabase.auth.getUser()
-
-  await supabase
-    .from('government_attendance')
-    .insert({
-      staff_id: selectedStaff,
-      tanggal: today,
-      on_duty: now.toTimeString().split(' ')[0],
-      created_by: userData.user.id
-    })
-
-  loadAttendance()
-}
 
   // 🔴 OFF DUTY
   const handleOffDuty = async () => {
-  if (!selectedStaff) {
-    alert('Pilih staff dulu')
-    return
+
+    if (!selectedStaff) {
+      alert('Pilih staff dulu')
+      return
+    }
+
+    const today = new Date().toISOString().split('T')[0]
+
+    const { data: record, error } = await supabase
+      .from('government_attendance')
+      .select('*')
+      .eq('staff_id', selectedStaff)
+      .eq('tanggal', today)
+      .single()
+
+    if (error || !record) {
+      alert('Belum ON DUTY hari ini')
+      return
+    }
+
+    if (record.off_duty) {
+      alert('Sudah OFF DUTY')
+      return
+    }
+
+    const now = new Date()
+
+    // FORMAT JAM MASUK
+    const onDutyDate = new Date(
+      `${today}T${record.on_duty}`
+    )
+
+    // HITUNG SELISIH
+    const diffMs = now - onDutyDate
+
+    // CONVERT KE JAM
+    const totalJam = (
+      diffMs / (1000 * 60 * 60)
+    ).toFixed(2)
+
+    // JAM KELUAR
+    const offDutyTime = now
+      .toTimeString()
+      .split(' ')[0]
+
+    // UPDATE DATABASE
+    const { error: updateError } = await supabase
+      .from('government_attendance')
+      .update({
+        off_duty: offDutyTime,
+        total_jam: totalJam
+      })
+      .eq('id', record.id)
+
+    if (updateError) {
+      console.log(updateError)
+      alert('Gagal OFF DUTY')
+      return
+    }
+
+    alert('OFF DUTY berhasil')
+
+    loadAttendance()
   }
-
-  const today = new Date().toISOString().split('T')[0]
-
-  const { data: record } = await supabase
-    .from('government_attendance')
-    .select('*')
-    .eq('staff_id', selectedStaff)
-    .eq('tanggal', today)
-    .single()
-
-  if (!record) {
-    alert('Belum ON DUTY hari ini')
-    return
-  }
-
-  if (record.off_duty) {
-    alert('Sudah OFF DUTY')
-    return
-  }
-
-  const now = new Date()
-
-  await supabase
-    .from('government_attendance')
-    .update({
-      off_duty: now.toTimeString().split(' ')[0]
-    })
-    .eq('id', record.id)
-
-  loadAttendance()
-}
 
   // LOGOUT
   const handleLogout = async () => {
@@ -295,6 +328,7 @@ export default function Dashboard({ role, goAdmin }) {
               <th style={thStyle}>Tanggal</th>
               <th style={thStyle}>ON DUTY</th>
               <th style={thStyle}>OFF DUTY</th>
+              <th style={thStyle}>TOTAL JAM</th>
             </tr>
 
           </thead>
@@ -323,6 +357,12 @@ export default function Dashboard({ role, goAdmin }) {
 
                 <td style={tdStyle}>
                   {item.off_duty || '-'}
+                </td>
+
+                <td style={tdStyle}>
+                  {item.total_jam
+                    ? `${item.total_jam} Jam`
+                    : '-'}
                 </td>
 
               </tr>
