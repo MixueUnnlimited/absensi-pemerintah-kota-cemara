@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 
@@ -29,13 +28,7 @@ export default function Dashboard({ role, goAdmin }) {
 
     const { data, error } = await supabase
       .from('government_attendance')
-      .select(`
-        *,
-        government_staff (
-          nama,
-          jabatan
-        )
-      `)
+      .select('*')
       .order('created_at', { ascending: false })
 
     if (error) {
@@ -51,7 +44,7 @@ export default function Dashboard({ role, goAdmin }) {
     loadAttendance()
   }, [])
 
-  // 🟢 ON DUTY
+  // ON DUTY
   const handleOnDuty = async () => {
 
     if (!selectedStaff) {
@@ -68,26 +61,19 @@ export default function Dashboard({ role, goAdmin }) {
       '-' +
       String(now.getDate()).padStart(2, '0')
 
-    // CHECK EXIST
-    const { data: existing, error: checkError } = await supabase
+    const { data: existing } = await supabase
       .from('government_attendance')
       .select('*')
       .eq('staff_id', selectedStaff)
       .eq('tanggal', today)
       .maybeSingle()
 
-    if (checkError) {
-      console.log(checkError)
-    }
-
     if (existing) {
       alert('Staff sudah ON DUTY hari ini')
       return
     }
 
-    const { data: userData } = await supabase.auth.getUser()
-
-    const onDutyTime = now.toLocaleTimeString('id-ID', {
+    const jamMasuk = now.toLocaleTimeString('id-ID', {
       hour12: false
     })
 
@@ -96,8 +82,7 @@ export default function Dashboard({ role, goAdmin }) {
       .insert({
         staff_id: selectedStaff,
         tanggal: today,
-        on_duty: onDutyTime,
-        created_by: userData.user.id
+        on_duty: jamMasuk
       })
 
     if (error) {
@@ -111,7 +96,7 @@ export default function Dashboard({ role, goAdmin }) {
     loadAttendance()
   }
 
-  // 🔴 OFF DUTY
+  // OFF DUTY
   const handleOffDuty = async () => {
 
     if (!selectedStaff) {
@@ -128,21 +113,15 @@ export default function Dashboard({ role, goAdmin }) {
       '-' +
       String(now.getDate()).padStart(2, '0')
 
-    const { data: record, error } = await supabase
+    const { data: record } = await supabase
       .from('government_attendance')
       .select('*')
       .eq('staff_id', selectedStaff)
       .eq('tanggal', today)
       .maybeSingle()
 
-    if (error) {
-      console.log(error)
-      alert(error.message)
-      return
-    }
-
     if (!record) {
-      alert('Belum ON DUTY hari ini')
+      alert('Belum ON DUTY')
       return
     }
 
@@ -151,39 +130,21 @@ export default function Dashboard({ role, goAdmin }) {
       return
     }
 
-    const offDutyTime = now.toLocaleTimeString('id-ID', {
+    const jamKeluar = now.toLocaleTimeString('id-ID', {
       hour12: false
     })
 
-    // HITUNG TOTAL JAM
-    const onDutyDate = new Date(
-      `${today}T${record.on_duty}`
-    )
-
-    const diffMs =
-      now.getTime() - onDutyDate.getTime()
-
-    const totalMinutes = Math.floor(
-      diffMs / (1000 * 60)
-    )
-
-    const hours = Math.floor(totalMinutes / 60)
-    const minutes = totalMinutes % 60
-
-    const totalJam =
-      `${hours} Jam ${minutes} Menit`
-
-    const { error: updateError } = await supabase
+    const { error } = await supabase
       .from('government_attendance')
       .update({
-        off_duty: offDutyTime,
-        total_jam: totalJam
+        off_duty: jamKeluar,
+        total_jam: 'Selesai'
       })
       .eq('id', record.id)
 
-    if (updateError) {
-      console.log(updateError)
-      alert(updateError.message)
+    if (error) {
+      console.log(error)
+      alert(error.message)
       return
     }
 
@@ -192,7 +153,6 @@ export default function Dashboard({ role, goAdmin }) {
     loadAttendance()
   }
 
-  // LOGOUT
   const handleLogout = async () => {
     await supabase.auth.signOut()
     window.location.reload()
@@ -201,71 +161,38 @@ export default function Dashboard({ role, goAdmin }) {
   return (
     <div style={{ padding: 25 }}>
 
-      {/* HEADER */}
       <div
         style={{
           display: 'flex',
           justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap'
+          alignItems: 'center'
         }}
       >
 
         <div>
           <h1>🏛️ Pemerintah Kota Cemara</h1>
-
-          <p style={{ color: '#94a3b8' }}>
-            Sistem Absensi Pemerintah
-          </p>
+          <p>Sistem Absensi Pemerintah</p>
         </div>
 
-        <button
-          onClick={handleLogout}
-          style={{
-            padding: '12px 18px',
-            border: 'none',
-            borderRadius: 12,
-            background: '#dc2626',
-            color: 'white',
-            cursor: 'pointer'
-          }}
-        >
+        <button onClick={handleLogout}>
           Logout
         </button>
 
       </div>
 
-      {/* FORM */}
-      <div
-        style={{
-          marginTop: 30,
-          padding: 25,
-          borderRadius: 22,
-          background: 'rgba(255,255,255,0.05)',
-          border: '1px solid rgba(255,255,255,0.08)'
-        }}
-      >
-
-        <h2>📌 Input Absensi</h2>
+      <div style={{
+        marginTop: 30
+      }}>
 
         <select
           value={selectedStaff}
           onChange={(e) =>
             setSelectedStaff(e.target.value)
           }
-          style={{
-            width: '100%',
-            padding: 14,
-            marginTop: 20,
-            borderRadius: 12,
-            background: '#0f172a',
-            color: 'white',
-            border: '1px solid rgba(255,255,255,0.1)'
-          }}
         >
 
           <option value=''>
-            Pilih Staff Pemerintah
+            Pilih Staff
           </option>
 
           {staffList.map((staff) => (
@@ -279,59 +206,23 @@ export default function Dashboard({ role, goAdmin }) {
 
         </select>
 
-        <div
-          style={{
-            display: 'flex',
-            gap: 15,
-            marginTop: 20,
-            flexWrap: 'wrap'
-          }}
-        >
+        <div style={{
+          marginTop: 20,
+          display: 'flex',
+          gap: 10
+        }}>
 
-          <button
-            onClick={handleOnDuty}
-            style={{
-              padding: '14px 20px',
-              border: 'none',
-              borderRadius: 14,
-              background: '#22c55e',
-              color: 'white',
-              fontWeight: 'bold',
-              cursor: 'pointer'
-            }}
-          >
-            🟢 ON DUTY
+          <button onClick={handleOnDuty}>
+            ON DUTY
           </button>
 
-          <button
-            onClick={handleOffDuty}
-            style={{
-              padding: '14px 20px',
-              border: 'none',
-              borderRadius: 14,
-              background: '#ef4444',
-              color: 'white',
-              fontWeight: 'bold',
-              cursor: 'pointer'
-            }}
-          >
-            🔴 OFF DUTY
+          <button onClick={handleOffDuty}>
+            OFF DUTY
           </button>
 
           {role === 'admin' && (
-            <button
-              onClick={goAdmin}
-              style={{
-                padding: '14px 20px',
-                border: 'none',
-                borderRadius: 14,
-                background: '#f59e0b',
-                color: 'white',
-                fontWeight: 'bold',
-                cursor: 'pointer'
-              }}
-            >
-              🛠️ Admin Panel
+            <button onClick={goAdmin}>
+              Admin Panel
             </button>
           )}
 
@@ -339,41 +230,24 @@ export default function Dashboard({ role, goAdmin }) {
 
       </div>
 
-      {/* TABLE */}
-      <div
-        style={{
-          marginTop: 30,
-          padding: 25,
-          borderRadius: 22,
-          background: 'rgba(255,255,255,0.05)',
-          border: '1px solid rgba(255,255,255,0.08)',
-          overflowX: 'auto'
-        }}
-      >
-
-        <h2>📋 Data Absensi Pemerintah</h2>
+      <div style={{
+        marginTop: 40
+      }}>
 
         <table
-          style={{
-            width: '100%',
-            marginTop: 20,
-            borderCollapse: 'collapse'
-          }}
+          width='100%'
+          border='1'
+          cellPadding='10'
         >
 
           <thead>
-
-            <tr style={{
-              background: 'rgba(255,255,255,0.05)'
-            }}>
-              <th style={thStyle}>Nama</th>
-              <th style={thStyle}>Jabatan</th>
-              <th style={thStyle}>Tanggal</th>
-              <th style={thStyle}>ON DUTY</th>
-              <th style={thStyle}>OFF DUTY</th>
-              <th style={thStyle}>TOTAL JAM</th>
+            <tr>
+              <th>STAFF ID</th>
+              <th>TANGGAL</th>
+              <th>ON DUTY</th>
+              <th>OFF DUTY</th>
+              <th>TOTAL</th>
             </tr>
-
           </thead>
 
           <tbody>
@@ -382,29 +256,11 @@ export default function Dashboard({ role, goAdmin }) {
 
               <tr key={item.id}>
 
-                <td style={tdStyle}>
-                  {item.government_staff?.nama || '-'}
-                </td>
-
-                <td style={tdStyle}>
-                  {item.government_staff?.jabatan || '-'}
-                </td>
-
-                <td style={tdStyle}>
-                  {item.tanggal || '-'}
-                </td>
-
-                <td style={tdStyle}>
-                  {item.on_duty || '-'}
-                </td>
-
-                <td style={tdStyle}>
-                  {item.off_duty || '-'}
-                </td>
-
-                <td style={tdStyle}>
-                  {item.total_jam || '-'}
-                </td>
+                <td>{item.staff_id}</td>
+                <td>{item.tanggal}</td>
+                <td>{item.on_duty || '-'}</td>
+                <td>{item.off_duty || '-'}</td>
+                <td>{item.total_jam || '-'}</td>
 
               </tr>
 
@@ -418,15 +274,4 @@ export default function Dashboard({ role, goAdmin }) {
 
     </div>
   )
-}
-
-const thStyle = {
-  padding: 14,
-  textAlign: 'left',
-  borderBottom: '1px solid rgba(255,255,255,0.08)'
-}
-
-const tdStyle = {
-  padding: 14,
-  borderBottom: '1px solid rgba(255,255,255,0.05)'
 }
