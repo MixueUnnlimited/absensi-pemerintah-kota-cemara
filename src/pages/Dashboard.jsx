@@ -59,7 +59,7 @@ export default function Dashboard({ role, goAdmin }) {
       .select('*')
       .eq('staff_id', selectedStaff)
       .eq('tanggal', today)
-      .single()
+      .maybeSingle()
 
     if (existing) {
       alert('Staff sudah ON DUTY hari ini')
@@ -68,7 +68,7 @@ export default function Dashboard({ role, goAdmin }) {
 
     const { data: userData } = await supabase.auth.getUser()
 
-    await supabase
+    const { error } = await supabase
       .from('government_attendance')
       .insert({
         staff_id: selectedStaff,
@@ -76,6 +76,12 @@ export default function Dashboard({ role, goAdmin }) {
         on_duty: now.toTimeString().split(' ')[0],
         created_by: userData.user.id
       })
+
+    if (error) {
+      console.log(error)
+      alert(error.message)
+      return
+    }
 
     alert('ON DUTY berhasil')
 
@@ -92,14 +98,14 @@ export default function Dashboard({ role, goAdmin }) {
 
     const today = new Date().toISOString().split('T')[0]
 
-    const { data: record, error } = await supabase
+    const { data: record } = await supabase
       .from('government_attendance')
       .select('*')
       .eq('staff_id', selectedStaff)
       .eq('tanggal', today)
-      .single()
+      .maybeSingle()
 
-    if (error || !record) {
+    if (!record) {
       alert('Belum ON DUTY hari ini')
       return
     }
@@ -140,7 +146,7 @@ export default function Dashboard({ role, goAdmin }) {
 
     if (updateError) {
       console.log(updateError)
-      alert('Gagal OFF DUTY')
+      alert(updateError.message)
       return
     }
 
@@ -389,3 +395,4 @@ const tdStyle = {
   padding: 14,
   borderBottom: '1px solid rgba(255,255,255,0.05)'
 }
+
