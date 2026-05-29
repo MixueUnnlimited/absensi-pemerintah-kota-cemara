@@ -6,16 +6,20 @@ export default function Dashboard({ role, goAdmin }) {
 
   const [staffList, setStaffList] = useState([])
   const [attendanceList, setAttendanceList] = useState([])
-
   const [selectedStaff, setSelectedStaff] = useState('')
 
   // LOAD STAFF
   const loadStaff = async () => {
 
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('government_staff')
       .select('*')
       .order('nama')
+
+    if (error) {
+      console.log(error)
+      return
+    }
 
     setStaffList(data || [])
   }
@@ -23,7 +27,7 @@ export default function Dashboard({ role, goAdmin }) {
   // LOAD ABSENSI
   const loadAttendance = async () => {
 
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('government_attendance')
       .select(`
         *,
@@ -33,6 +37,11 @@ export default function Dashboard({ role, goAdmin }) {
         )
       `)
       .order('created_at', { ascending: false })
+
+    if (error) {
+      console.log(error)
+      return
+    }
 
     setAttendanceList(data || [])
   }
@@ -51,15 +60,25 @@ export default function Dashboard({ role, goAdmin }) {
     }
 
     const now = new Date()
-    const today = now.toISOString().split('T')[0]
 
-    // CEK SUDAH ON DUTY
-    const { data: existing } = await supabase
+    const today =
+      now.getFullYear() +
+      '-' +
+      String(now.getMonth() + 1).padStart(2, '0') +
+      '-' +
+      String(now.getDate()).padStart(2, '0')
+
+    // CHECK EXIST
+    const { data: existing, error: checkError } = await supabase
       .from('government_attendance')
       .select('*')
       .eq('staff_id', selectedStaff)
       .eq('tanggal', today)
       .maybeSingle()
+
+    if (checkError) {
+      console.log(checkError)
+    }
 
     if (existing) {
       alert('Staff sudah ON DUTY hari ini')
@@ -68,7 +87,6 @@ export default function Dashboard({ role, goAdmin }) {
 
     const { data: userData } = await supabase.auth.getUser()
 
-    // FORMAT JAM
     const onDutyTime = now.toLocaleTimeString('id-ID', {
       hour12: false
     })
@@ -101,14 +119,27 @@ export default function Dashboard({ role, goAdmin }) {
       return
     }
 
-    const today = new Date().toISOString().split('T')[0]
+    const now = new Date()
 
-    const { data: record } = await supabase
+    const today =
+      now.getFullYear() +
+      '-' +
+      String(now.getMonth() + 1).padStart(2, '0') +
+      '-' +
+      String(now.getDate()).padStart(2, '0')
+
+    const { data: record, error } = await supabase
       .from('government_attendance')
       .select('*')
       .eq('staff_id', selectedStaff)
       .eq('tanggal', today)
       .maybeSingle()
+
+    if (error) {
+      console.log(error)
+      alert(error.message)
+      return
+    }
 
     if (!record) {
       alert('Belum ON DUTY hari ini')
@@ -120,34 +151,28 @@ export default function Dashboard({ role, goAdmin }) {
       return
     }
 
-    const now = new Date()
-
-    // FORMAT JAM MASUK
-    const onDutyDate = new Date(
-      `${today}T${record.on_duty}`
-    )
-
-    // HITUNG SELISIH
-    const diffMs = now.getTime() - onDutyDate.getTime()
-
-    // TOTAL MENIT
-    const totalMinutes = Math.floor(
-      diffMs / (1000 * 60)
-    )
-
-    // CONVERT
-    const hours = Math.floor(totalMinutes / 60)
-    const minutes = totalMinutes % 60
-
-    // FORMAT FINAL
-    const totalJam = `${hours} Jam ${minutes} Menit`
-
-    // JAM KELUAR
     const offDutyTime = now.toLocaleTimeString('id-ID', {
       hour12: false
     })
 
-    // UPDATE DATABASE
+    // HITUNG TOTAL JAM
+    const onDutyDate = new Date(
+      `${today}T${record.on_duty}`
+    )
+
+    const diffMs =
+      now.getTime() - onDutyDate.getTime()
+
+    const totalMinutes = Math.floor(
+      diffMs / (1000 * 60)
+    )
+
+    const hours = Math.floor(totalMinutes / 60)
+    const minutes = totalMinutes % 60
+
+    const totalJam =
+      `${hours} Jam ${minutes} Menit`
+
     const { error: updateError } = await supabase
       .from('government_attendance')
       .update({
@@ -358,15 +383,15 @@ export default function Dashboard({ role, goAdmin }) {
               <tr key={item.id}>
 
                 <td style={tdStyle}>
-                  {item.government_staff?.nama}
+                  {item.government_staff?.nama || '-'}
                 </td>
 
                 <td style={tdStyle}>
-                  {item.government_staff?.jabatan}
+                  {item.government_staff?.jabatan || '-'}
                 </td>
 
                 <td style={tdStyle}>
-                  {item.tanggal}
+                  {item.tanggal || '-'}
                 </td>
 
                 <td style={tdStyle}>
